@@ -10,9 +10,20 @@ logger = util.getlogger(loglevel=args.loglevel)
 library = None
 if args.bibtexfile:
     library = bibtex.read(args.bibtexfile, args.dedupe)
+    logger.info(f"Parsed {len(library.entries)} from {args.bibtexfile}.")
 
+dois = list(args.dois)
 if args.fromfile:
-    print(util.doifinder(args.fromfile))
+    dois += util.doifinder(args.fromfile)
+    print(dois)
 
-for doi in args.dois:
-    print(util.doitobibtex(doi))
+entries = []
+for doi in dois:
+    result = util.doitobibtex(doi)
+    entry = bibtex.read(result)
+    if entry.entries:
+        entries.append(entry)
+        print(result)
+
+if entries and library is not None:
+    logger.info(f"Adding {len(entries)} entries to library.")
