@@ -19,5 +19,14 @@ parser.add_argument('--dedupe', action='store_true', default=False,
         help='Dedupe the bibtex library.')
 parser.add_argument('--loglevel', default='info', choices=('info', 'warn', 'error', 'debug'),
         help="Set the logging level.")
+parser.add_argument('--refresh', action='store_true', default=False,
+    help="Refresh cached journal list.")
+parser.add_argument('--database', type=str,
+    default='https://raw.githubusercontent.com/JabRef/'\
+        +'abbrv.jabref.org/master/journals/journal_abbreviations_acs.csv',
+    help="Databse of journal abbreviations.")
+parser.add_argument('-c','--custom', action='append', default=[],
+        help="Cust abbreviations separated by equal signs, e.g., -c 'Journal of Kittens;J. Kitt.'\
+        You can call this argument more than once. These will be cached.")
 
 opts = parser.parse_args()

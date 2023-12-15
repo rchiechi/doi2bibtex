@@ -5,7 +5,13 @@ import util
 import bibtex
 
 args = opts.getopts()
-logger = util.getlogger(loglevel=args.loglevel)
+logger = util.getlogger('doi2bib', root=True, loglevel=args.loglevel)
+
+logger.debug("Debug logging enabled.")
+
+journals = util.loadabbreviations(args.database,
+                                  custom=args.custom,
+                                  refresh=args.refresh)
 
 library = None
 if args.bibtexfile:

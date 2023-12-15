@@ -12,7 +12,6 @@ def dedupe_bib_library(library):
     '''Check for duplicate bibtex entries'''
     for entry in library.failed_blocks:
         print(f"{Style.BRIGHT}Failed:{Fore.RED} {entry.key}")
-        
     dedupe = []
     dupes = {}
     for entry in library.entries:
@@ -24,6 +23,7 @@ def dedupe_bib_library(library):
             if _p and _v:
                 dedupe.append( (_key, _p, _v, _j, _doi) )
         except KeyError:
+            
             continue
     while dedupe:
         # Pop a dedupe tuple off the list
@@ -55,10 +55,10 @@ def dodedupe(library, dupes):
         print('\t\t# # #')
         for _n in dupelist:
             try:
-                print('%s%s%s):   %s%s' % (Style.BRIGHT,Fore.YELLOW,_n,Fore.CYAN,dupelist[_n].'key'))
-                print('%sJournal: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n]fields_dict['journal'].value))
-                print('%sVolume: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n]fields_dict['volume'].value))
-                print('%sPages: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n]fields_dict['pages'].value), end='\n\n')
+                print('%s%s%s):   %s%s' % (Style.BRIGHT,Fore.YELLOW,_n,Fore.CYAN,dupelist[_n].key))
+                print('%sJournal: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n].fields_dict['journal'].value))
+                print('%sVolume: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n].fields_dict['volume'].value))
+                print('%sPages: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n].fields_dict['pages'].value), end='\n\n')
             except KeyError as msg:
                 print("Error parsing entry: %s" % str(msg))
         keep = input('Keep which one?  ')
