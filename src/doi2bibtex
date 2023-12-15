@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+
+import opts
+import util
+
+args = opts.getopts()
+logger = util.getlogger(loglevel=args.loglevel)
+
+for doi in args.dois:
+    print(util.doitobibtex(doi))
