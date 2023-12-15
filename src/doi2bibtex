@@ -6,5 +6,8 @@ import util
 args = opts.getopts()
 logger = util.getlogger(loglevel=args.loglevel)
 
+if args.fromfile:
+    print(util.doifinder(args.fromfile))
+
 for doi in args.dois:
     print(util.doitobibtex(doi))
