@@ -1,14 +1,15 @@
 import os
 import bibtexparser
 import bibtexparser.middlewares as m
-from .month import MonthIntStrMiddleware
+from .month import MonthIntMiddleware
 from util import getlogger
 from .dedupe import dedupe_bib_library
 
 logger = getlogger(__name__)
 
 layers = [
-    MonthIntStrMiddleware(True), # Months should be represented as int (0-12)
+    m.RemoveEnclosingMiddleware(True), # Remove enclosures to parse dates correctly
+    m.MonthIntMiddleware(True), # Months should be represented as int (0-12)
     m.LatexDecodingMiddleware(True)
 ]
 
