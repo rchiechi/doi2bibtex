@@ -2,9 +2,14 @@
 
 import opts
 import util
+import bibtex
 
 args = opts.getopts()
 logger = util.getlogger(loglevel=args.loglevel)
+
+library = None
+if args.bibtexfile:
+    library = bibtex.read(args.bibtexfile, args.dedupe)
 
 if args.fromfile:
     print(util.doifinder(args.fromfile))
