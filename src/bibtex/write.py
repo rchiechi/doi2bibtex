@@ -1,7 +1,6 @@
 import os
 import bibtexparser
 import bibtexparser.middlewares as m
-from .month import MonthIntMiddleware
 from util import getlogger
 from .dedupe import dedupe_bib_library
 import interact
@@ -12,7 +11,7 @@ layers = [
     m.LatexEncodingMiddleware(True)
 ]
 
-def write_bib(library, db):
+def write_bib(library: bibtexparser.library, db: str):
     if os.path.exists(db):
         if not interact.overwrite(os.path.basename(db)):
             return

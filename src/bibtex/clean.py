@@ -1,6 +1,6 @@
 '''The main class for parsing BiBTeX records'''
 import sys
-import Levenshtein #pip3 install python-levenshtein
+import Levenshtein  # pip3 install python-levenshtein
 from titlecase import titlecase
 from bibtexparser.customization import page_double_hyphen
 from bibtexparser.latexenc import string_to_latex

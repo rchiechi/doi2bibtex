@@ -42,19 +42,18 @@ def loadcache(database, **kwargs):
         refresh()
     journals = {}
     if not os.path.exists(JCACHE):
-        logger.info('%sFetching list of common journal abbreviations.' % Fore.YELLOW)
+        logger.debug('Fetching list of common journal abbreviations.')
         _r = requests.get(database)
         if _r.status_code != 200:
-            logger.error("%sError fetching journal abbreviations with code %s" %\
-                (Fore.RED,str(_r.status_code)) )
+            logger.error("Error fetching journal abbreviations with code %s", _r.status_code)
         else:
             journals = parseabbreviations(_r.text.split('\n'))
     else:
         try:
             journals = pickle.load(open(JCACHE,'rb'))
-            logger.debug('%sRead journal abbreciations from %s.' % (Fore.YELLOW,JCACHE))
+            logger.debug('Read journal abbreciations from %s.', JCACHE)
         except OSError:
-            logger.error('%sError loading cache from %s.' % (Fore.RED,JCACHE))
+            logger.error('Error loading cache from %s.', JCACHE)
             kwargs['refresh'] = True
             loadcache(database, **kwargs)
     if kwargs.get('custom', {}):
@@ -67,9 +66,9 @@ def writetodisk(journals):
     '''Save cache to disk'''
     try:
         pickle.dump(journals,open(JCACHE,'wb'))
-        logger.info('%sSaved cache to %s' % (Fore.YELLOW,JCACHE))
+        logger.debug('Saved cache to %s', JCACHE)
     except OSError:
-        logger.info('%sError saving cache to %s' % (Fore.RED,JCACHE))
+        logger.debug('Error saving cache to %s' ,JCACHE)
 
 def parseabbreviations(entries, quiet=True):
     '''Parse abbreviations in the format "ACS Applied Materials & Interfaces","ACS Appl. Mater. Interfaces"'''
@@ -87,6 +86,5 @@ def parseabbreviations(entries, quiet=True):
         if len(_t.split('(')) > 1:
             journals[_t.split('(')[0].strip()] = _a.split('(')[0].strip()
         if not quiet:
-            logger.info("%sAdding custom journal %s%s => %s" % (
-                    Style.BRIGHT+Fore.CYAN, Fore.WHITE, _t, _a))
+            logger.info("Adding custom journal %s => %s", _t, _a)
     return journals

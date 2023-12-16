@@ -9,7 +9,7 @@ logger = return_logger(__name__)
 def get_bibtex_from_url(doi):
     if isinstance(doi, bytes):
         doi = str(doi, encoding='utf-8')
-    bibtext = ''
+    bibtex = ''
     url = BASE_URL + doi
     req = urllib.request.Request(url)
     req.add_header('Accept', 'application/x-bibtex')

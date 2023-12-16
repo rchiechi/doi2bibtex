@@ -6,9 +6,8 @@ logger = getlogger(__name__)
 # Setup colors
 init(autoreset=True)
 
-def ask_overwrite(fn: str) -> bool:
-    '''Ask user to overwrite a file'''
-    print(f"{Style.BRIGHT}{Fore.WHITE}Overwrite {Fore.YELLOW}{fn}{Fore.WHITE}?")
+def ask_yes_no(msg: str) -> bool:
+    print(f"{Style.BRIGHT}{msg}")
     answer = ''
     while answer.lower() not in ('y','n','yes','no'):
         answer = input('y/n: ')
