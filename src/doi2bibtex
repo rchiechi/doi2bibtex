@@ -15,21 +15,19 @@ journals = util.loadabbreviations(args.database,
 
 library = None
 if args.bibtexfile:
-    library = bibtex.read(args.bibtexfile, args.dedupe)
+    library = bibtex.read(args.bibtexfile)
     logger.info(f"Parsed {len(library.entries)} from {args.bibtexfile}.")
 
 dois = list(args.dois)
 if args.fromfile:
     dois += util.doifinder(args.fromfile)
-    print(dois)
+    logger.debug(dois)
 
-entries = []
 for doi in dois:
     result = util.doitobibtex(doi)
-    entry = bibtex.read(result)
-    if entry.entries:
-        entries.append(entry)
-        print(result)
+    if result:
+        library.add(result)
+        logger.info(f"Added {doi} to library")
 
-if entries and library is not None:
-    logger.info(f"Adding {len(entries)} entries to library.")
+if library is not None:
+    logger.info("Upadted library.")

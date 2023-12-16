@@ -4,6 +4,7 @@ import bibtexparser.middlewares as m
 from .month import MonthIntMiddleware
 from util import getlogger
 from .dedupe import dedupe_bib_library
+import interact
 
 logger = getlogger(__name__)
 
@@ -13,11 +14,8 @@ layers = [
     m.LatexDecodingMiddleware(True)
 ]
 
-def load_bib(bibtex, dedupe=False):
-    if os.path.exists(bibtex):
-        library = bibtexparser.parse_file(bibtex, append_middleware=layers)
-    else:
-        library = bibtexparser.parse_string(bibtex, append_middleware=layers)
-    if dedupe:
-        return dedupe_bib_library(library)
-    return library
+def write_bib(library, db):
+    if os.path.exists(db):
+        if not interact.overwrite(os.path.basename(db)):
+            return
+    bibtexparser.write_file(db, library)
