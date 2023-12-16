@@ -1,16 +1,14 @@
 '''Simple caching functions for journal abbreviations'''
-import sys
 import os
+import re
 import tempfile
 import pickle
 import requests
-from colorama import init,Fore,Style
 from .getlogger import return_logger
 
 logger = return_logger(__name__)
 
-# Setup colors
-init(autoreset=True)
+JOURNALREGEX = [re.compile('"(.*)"[,;=]"(.*)"')]
 
 # Setup cache dir
 if 'APPDATA' in os.environ:
@@ -24,10 +22,11 @@ if not os.path.exists(CACHEDIR):
     try:
         # Create it if it doesn't exist
         os.makedirs(CACHEDIR)
-    except OSError as msg:
+    except OSError:
         # Fall back to global tempdir
         CACHEDIR = tempfile.gettempdir()
-JCACHE=os.path.join(CACHEDIR,'journal_abbreviations.cache')
+
+JCACHE = os.path.join(CACHEDIR,'journal_abbreviations.cache')
 
 
 def refresh():
@@ -56,8 +55,10 @@ def loadcache(database, **kwargs):
             logger.error('Error loading cache from %s.', JCACHE)
             kwargs['refresh'] = True
             loadcache(database, **kwargs)
-    if kwargs.get('custom', {}):
-        journals.update(parseabbreviations(kwargs['custom'], False))
+    if kwargs.get('custom', []):
+        for _custom in kwargs['custom']:
+            _k, _v = _custom.split(';')
+            journals[_k.strp()] = _v.strip()
     writetodisk(journals)
     logger.debug(f"Loaded {len(journals)} abbreviations.")
     return journals
@@ -68,23 +69,18 @@ def writetodisk(journals):
         pickle.dump(journals,open(JCACHE,'wb'))
         logger.debug('Saved cache to %s', JCACHE)
     except OSError:
-        logger.debug('Error saving cache to %s' ,JCACHE)
+        logger.debug('Error saving cache to %s', JCACHE)
 
-def parseabbreviations(entries, quiet=True):
+def parseabbreviations(entries):
     '''Parse abbreviations in the format "ACS Applied Materials & Interfaces","ACS Appl. Mater. Interfaces"'''
     journals = {}
     for _l in entries:
-        _t, _a = None, None
-        for _delim in (',', ';', '='):
+        _t, _a = '', ''
+        for _re in JOURNALREGEX:
+            m = re.search(_re, _l)
             try:
-                _t, _a = _l.split(_delim)
-            except ValueError:
+                _t, _a = m.groups()
+                journals[_t.strip()] = _a.strip()
+            except (ValueError, AttributeError):
                 continue
-        if _t is None or _a is None:
-            continue
-        journals[_t.strip()] = _a.strip()
-        if len(_t.split('(')) > 1:
-            journals[_t.split('(')[0].strip()] = _a.split('(')[0].strip()
-        if not quiet:
-            logger.info("Adding custom journal %s => %s", _t, _a)
     return journals

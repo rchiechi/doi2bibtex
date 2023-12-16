@@ -17,6 +17,8 @@ parser.add_argument('--fromfile', metavar='find-dois-in-file', type=str,
 #                     help="Trim these characters from DOIs on replace e.g., square braces from [DOI].")
 parser.add_argument('--bibtexfile', type=str,
                     help='A bibtex database to read/write from.')
+parser.add_argument('--clean', action='store_true', default=False,
+                    help="Clean bibtex db entries.")
 parser.add_argument('--dedupe', action='store_true', default=False,
                     help='Dedupe the bibtex library.')
 parser.add_argument('--loglevel', default='info', choices=('info', 'warn', 'error', 'debug'),

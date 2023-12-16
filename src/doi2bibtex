@@ -38,6 +38,14 @@ for doi in dois:
 
 if library is not None:
     print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
+    if args.clean and journals:
+        cleaner = bibtex.clean(library, journals)
+        library = cleaner.clean()
+        journals.update(cleaner.custom)
+        util.updatecache(journals)
+    elif args.clean:
+        print(f"{Style.BRIGHT}{Fore.RED}No journals parsed, cannot clean.")
+
     if args.bibtexfile:
         if interact.ask(f"Save library to {args.bibtexfile}?"):
             bibtex.write(library, args.bibtexfile)

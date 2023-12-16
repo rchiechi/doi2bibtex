@@ -17,11 +17,10 @@ def find_doi(_str: str):
     if isinstance(_str, str):
         _str = bytes(_str, encoding='utf-8')
     if len(_str) < 255 and os.path.exists(_str):
-            logger.debug(f'Searching file {_str} for dois')
-            return find_doi_in_file(_str)
+        logger.debug(f'Searching file {_str} for dois')
+        return find_doi_in_file(_str)
     logger.debug('Searching string for dois')
     return find_doi_in_bytearray(_str)
-    
 
 def find_doi_in_bytearray(textstring: bytearray):
     dois = []

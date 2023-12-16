@@ -2,8 +2,6 @@
 import sys
 import Levenshtein  # pip3 install python-levenshtein
 from titlecase import titlecase
-from bibtexparser.customization import page_double_hyphen
-from bibtexparser.latexenc import string_to_latex
 from colorama import init,Fore,Style
 from util import getlogger
 
@@ -15,125 +13,120 @@ init(autoreset=True)
 
 class EntryCleaner:
 
-    recordkeys = ('key', 'title', 'journal')
+    recordkeys = ('title', 'journal')
 
     def __init__(self, library, journals):
         self.library = library
         self.journals = journals
         self.errors = []
         self.history = {}
+        self.custom = {}
         self.stats = {'n_cleaned':0,
                       'n_parsed':0,
                       'n_abbreviated':0}
 
-    def consider(self, entry):
+    def clean(self):
+        for entry in self.library.entries:
+            self.library.replace(entry, self._clean_entry(entry))
+        return self.library
+
+    def _clean_entry(self, entry):
         '''Main record handling method that gets called when bibtexparser adds an entry'''
-        for key in RecordHandler.recordkeys:
-            if key not in entry: # and record['ENTRYTYPE'] == 'journal':
-                logger.info('%sCannot parse %s' % (Fore.RED, entry.key))
+        if entry.entry_type.lower() != 'article':
+            print(f'{Fore.RED}Cannot parse {entry.key} ({entry.entry_type})')
+            self.errors.append(entry)
+            return entry
+        for key in EntryCleaner.recordkeys:
+            if key not in entry.fields_dict:
+                print(f'{Fore.RED}Cannot parse {entry.key} (missing: {key})')
                 self.errors.append(entry)
-                # self.clean.append(record)
                 return entry
-        # for _key in ('pages', 'volume'):
-        #     if _key not in entry:
-        #         entry[_key] = ''
         cleantitle = titlecase(entry['title'])
-        if cleantitle != entry['title']:
+        if cleantitle != entry.fields_dict['title']:
             self.stats['n_cleaned'] += 1
             entry.fields_dict['title'].value = cleantitle
         # File entries are pointless in shared bib files
         for key in ('file', 'bdsk-file-1'):
-            if key in record:
-                del record[key]
-        # Non-numeric months do not sort
-        if 'month' in record:
-            if convertmonth(record['month']):
-                record['month']=convertmonth(record['month'])
-        # Names should be separated by 'and'; comma is to reverse name/surname order
-        if 'author' in record:
-            # logger.info(record['author'].split(','))
-            if ' and ' not in record['author'] and ',' in record['author']:
-                authors=[]
-                for author in record['author'].split(','):
+            if key in entry.fields_dict:
+                del entry.fields_dict[key]
+        if 'author' in entry.fields_dict:
+            if ' and ' not in entry.fields_dict['author'].value and ',' in entry.fields_dict['author'].value:
+                authors = []
+                for author in entry.fields_dict['author'].split(','):
                     authors.append('{'+author.strip()+'}')
-                record['author'] = " and ".join(authors)
-        return self.__getuserinput(record)
+                entry.fields_dict['author'].value = " and ".join(authors)
+        if entry.fields_dict['journal'] in list(self.journals.values()):
+            logger.debug("Entry already parsed, skipping user input.")
+            return entry
+        return self._getuserinput(entry)
 
-    def __getuserinput(self, record):
+    def _getuserinput(self, entry):
         '''Determine if we need to ask the user for input and then do it.'''
-        fuzzy,score = self.__fuzzymatch(record['journal'])
-        __abbrev = False
-        if record['journal'] in self.history:
-            fuzzy = self.history[record['journal']]
-            __abbrev = bool(fuzzy)
+        fuzzy, score = self._fuzzymatch(entry.fields_dict['journal'].value)
+        _abbrev = False
+        if entry.fields_dict['journal'].value in self.history:
+            fuzzy = self.history[entry.fields_dict['journal'].value]
+            _abbrev = bool(fuzzy)
         elif score > 0.95:
-            __abbrev = True
+            _abbrev = True
         else:
             try:
                 _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s" or something else? ' % (
-                    score*100,Style.BRIGHT+Fore.YELLOW,
-                    record['journal'],Style.RESET_ALL,
-                    Style.BRIGHT+Fore.GREEN,
+                    score * 100, Style.BRIGHT + Fore.YELLOW,
+                    entry.fields_dict['journal'].value, Style.RESET_ALL,
+                    Style.BRIGHT + Fore.GREEN,
                     fuzzy,Style.RESET_ALL))
                 if _j.lower() in ('y','yes'):
-                    __abbrev = True
+                    _abbrev = True
                 elif _j.lower() in ('n','no',''):
-                    self.history[record['journal']] = None
+                    self.history[entry.fields_dict['journal'].value] = None
                 elif _j:
+                    self.custom[entry.fields_dict['journal'].value] = _j
                     fuzzy = _j
-                    __abbrev = True
+                    _abbrev = True
             except KeyboardInterrupt:
-                logger.info('')
                 sys.exit()
 
-        if __abbrev and not record['journal'] == fuzzy:
-            self.history[record['journal']] = fuzzy
-            logger.info('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
-                Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
+        if _abbrev and not entry.fields_dict['journal'].value == fuzzy:
+            self.history[entry.fields_dict['journal'].value] = fuzzy
+            print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT, Fore.CYAN, entry.fields_dict['journal'].value,
+                  Fore.WHITE, Fore.CYAN, fuzzy,Style.RESET_ALL))
             self.stats['n_abbreviated'] += 1
-            record['journal'] = fuzzy
-        record['journal'] = string_to_latex(record['journal'])
-        record = page_double_hyphen(record)
+            entry.fields_dict['journal'].value = fuzzy
+        entry.fields_dict['journal'].value = self._page_double_hyphen(entry.fields_dict['journal'].value)
         self.stats['n_parsed'] += 1
-        return record
+        return entry
 
-    def __fuzzymatch(self,journal):
-        '''Private method to do a fuzzy match of journal names'''
-        i = ('',0)
+    def _page_double_hyphen(self, page):
+        if len(page.split('-')) in (1,3):
+            return page
+        elif len(page.split('-')) >= 2:
+            return(f"{page.split('-')[0]}--{page.split('-')[-1]}")
+        return page
+
+    def _fuzzymatch(self, journal):
+        '''Do a fuzzy match of journal names'''
+        i = ('', 0)
         for key in self.journals:
-            _a = Levenshtein.ratio(journal,key) #pylint: disable=E1101
-            _b = Levenshtein.ratio(journal,self.journals[key]) #pylint: disable=E1101
+            _a = Levenshtein.ratio(journal, key)
+            _b = Levenshtein.ratio(journal, self.journals[key])
             if _a > i[1]:
-                i = [self.journals[key],_a]
+                i = [self.journals[key], _a]
             if _b > i[1]:
-                i = [self.journals[key],_b]
+                i = [self.journals[key], _b]
         return i
 
-    def getcustom(self):
-        '''Return any custom journal abbreviations entered during handle_record'''
-        unique = []
-        for key in self.history:
-            if self.history[key] is None:
-                continue
-            if key not in self.journals:
-                unique.append(";".join([key, self.history[key]]))
-                logger.info("%sCaching %s%s ==> %s" % (
-                    Style.BRIGHT+Fore.CYAN, Fore.WHITE,
-                    key, self.history[key]))
-        return unique
-
-    def logger.infostats(self):
-        '''logger.info stats in pretty colors'''
-        logger.info('%s%sParsed: %s\n%sCleaned: %s\n%sAbbreviated: %s\n%sFailed:%s%s' % \
-                (Style.BRIGHT,Fore.GREEN,self.stats['n_parsed'],Fore.YELLOW,
-                    self.stats['n_cleaned'],Fore.MAGENTA,self.stats['n_abbreviated'],
-                    Fore.RED,len(self.errors),Style.RESET_ALL))
+    def printinfostats(self):
+        '''print stats in pretty colors'''
+        print('%s%sParsed: %s\n%sCleaned: %s\n%sAbbreviated: %s\n%sFailed:%s%s' %
+              (Style.BRIGHT, Fore.GREEN, self.stats['n_parsed'], Fore.YELLOW,
+               self.stats['n_cleaned'], Fore.MAGENTA, self.stats['n_abbreviated'],
+               Fore.RED, len(self.errors), Style.RESET_ALL))
         if self.errors:
-            logger.info('\nEntries that produced errors:\n')
-            #logger.info(self.errors)
+            print('\nEntries that produced errors:\n')
             for err in self.errors:
                 logger.info('* * * * * * * * * * * * * * * *')
-                for key in RecordHandler.recordkeys:
+                for key in EntryCleaner.recordkeys:
                     if key not in err:
                         logger.info('%s%s%s: -' % (Fore.RED,titlecase(key),Style.RESET_ALL))
                     else:

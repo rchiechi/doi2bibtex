@@ -1,15 +1,15 @@
 import os
 import bibtexparser
 import bibtexparser.middlewares as m
-from .month import MonthIntStrMiddleware
+# from .month import MonthIntStrMiddleware
 from util import getlogger
 from .dedupe import dedupe_bib_library
 
 logger = getlogger(__name__)
 
 layers = [
-    MonthIntStrMiddleware(True), # Months should be represented as str-int (0-12)
-    m.LatexDecodingMiddleware(True)
+    m.LatexDecodingMiddleware(True),
+    m.MonthIntMiddleware(True)
 ]
 
 def load_bib(bibtex, dedupe=False):

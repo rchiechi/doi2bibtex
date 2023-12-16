@@ -1,7 +1,7 @@
 from .doitobibtex import get_bibtex_from_url
 from .getlogger import return_logger
 from .doifinder import find_doi
-from .cache import loadcache
+from .cache import loadcache, writetodisk
 
 def doitobibtex(doi):
     return get_bibtex_from_url(doi)
@@ -13,4 +13,7 @@ def doifinder(textstring):
     return find_doi(textstring)
 
 def loadabbreviations(database, **kwargs):
-    loadcache(database, **kwargs)    
+    return loadcache(database, **kwargs)
+
+def updatecache(journals):
+    return writetodisk(journals)
