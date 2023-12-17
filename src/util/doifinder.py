@@ -5,11 +5,11 @@ from .getlogger import return_logger
 
 # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
 
-DOIREGEX = [re.compile(b'10.\d{4,9}/[-._;()/:A-Z0-9]+'),
-            re.compile(b'10.1002/[^\s]+'),
-            re.compile(b'10.\d{4}/\d+-\d+X?(\d+)\d+<[\d\w]+:[\d\w]*>\d+.\d+.\w+;\d'),
-            re.compile(b'10.1021/\w\w\d++'),
-            re.compile(b'10.1207/[\w\d]+\&\d+_\d+')]
+DOIREGEX = [re.compile(b'10.\\d{4,9}/[-._;()/:A-Z0-9]+'),
+            re.compile(b'10.1002/[^\\s]+'),
+            re.compile(b'10.\\d{4}/\\d+-\\d+X?(\\d+)\\d+<[\\d\\w]+:[\\d\\w]*>\\d+.\\d+.\\w+;\\d'),
+            re.compile(b'10.1021/\\w\\w\\d++'),
+            re.compile(b'10.1207/[\\w\\d]+\\&\\d+_\\d+')]
 
 logger = return_logger(__name__)
 

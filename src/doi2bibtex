@@ -45,7 +45,10 @@ if library is not None:
         util.updatecache(journals)
     elif args.clean:
         print(f"{Style.BRIGHT}{Fore.RED}No journals parsed, cannot clean.")
-
+    if args.dedupe:
+        library = bibtex.dedupe(library)
+    if args.replace and args.fromfile:
+        bibtex.replacedois(args.fromfile, library, args.citecmd, args.trim)
     if args.bibtexfile:
         if interact.ask(f"Save library to {args.bibtexfile}?"):
             bibtex.write(library, args.bibtexfile)

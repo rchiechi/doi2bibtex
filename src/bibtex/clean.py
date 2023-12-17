@@ -16,6 +16,7 @@ class EntryCleaner:
     recordkeys = ('title', 'journal')
 
     def __init__(self, library, journals):
+        self.stop = False
         self.library = library
         self.journals = journals
         self.errors = []
@@ -27,6 +28,8 @@ class EntryCleaner:
 
     def clean(self):
         for entry in self.library.entries:
+            if self.stop:
+                break
             self.library.replace(entry, self._clean_entry(entry))
         return self.library
 
@@ -88,8 +91,9 @@ class EntryCleaner:
                     fuzzy = _j
                     _abbrev = True
             except KeyboardInterrupt:
-                sys.exit()
-
+                print(' ')
+                self.stop = True
+                return entry
         if _abbrev and not entry.fields_dict['journal'].value == fuzzy:
             self.history[entry.fields_dict['journal'].value] = fuzzy
             print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT, Fore.CYAN, entry.fields_dict['journal'].value,

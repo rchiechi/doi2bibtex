@@ -1,5 +1,3 @@
-import bibtexparser
-import bibtexparser.middlewares as m
 from colorama import init,Fore,Style,Back
 from util import getlogger
 
@@ -21,9 +19,8 @@ def dedupe_bib_library(library):
             _doi = entry.fields_dict['doi'].value
             _key = entry.key
             if _p and _v:
-                dedupe.append( (_key, _p, _v, _j, _doi) )
+                dedupe.append((_key, _p, _v, _j, _doi))
         except KeyError:
-            
             continue
     while dedupe:
         # Pop a dedupe tuple off the list
