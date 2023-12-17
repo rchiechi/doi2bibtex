@@ -2,6 +2,7 @@ from .doitobibtex import get_bibtex_from_url
 from .getlogger import return_logger
 from .doifinder import find_doi
 from .cache import loadcache, writetodisk
+from .abbreviso import query_abbreviso
 
 def doitobibtex(doi):
     return get_bibtex_from_url(doi)
@@ -17,3 +18,6 @@ def loadabbreviations(database, **kwargs):
 
 def updatecache(journals):
     return writetodisk(journals)
+
+def getISO4(journal):
+    return query_abbreviso(journal)

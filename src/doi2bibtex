@@ -32,7 +32,7 @@ added = 0
 for doi in dois:
     result = util.doitobibtex(doi)
     if result:
-        library.add(result)
+        library.add(bibtex.read(result).entries)
         logger.debug(f"Added {doi} to library")
         added += 1
 

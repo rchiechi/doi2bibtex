@@ -3,7 +3,7 @@ import sys
 import Levenshtein  # pip3 install python-levenshtein
 from titlecase import titlecase
 from colorama import init,Fore,Style
-from util import getlogger
+from util import getlogger, getISO4
 
 logger = getlogger(__name__)
 
@@ -70,6 +70,9 @@ class EntryCleaner:
         elif score > 0.95:
             _abbrev = True
         else:
+            if score < 0.9:
+                fuzzy = getISO4(entry.fields_dict['journal'].value)
+                logger.debug(f'Using ISO4 "{fuzzy}"')
             try:
                 _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s" or something else? ' % (
                     score * 100, Style.BRIGHT + Fore.YELLOW,
@@ -112,8 +115,10 @@ class EntryCleaner:
             _b = Levenshtein.ratio(journal, self.journals[key])
             if _a > i[1]:
                 i = [self.journals[key], _a]
+                # print(f'{journal}:{key}=>{_a}')
             if _b > i[1]:
                 i = [self.journals[key], _b]
+                # print(f'{journal}:{self.journals[key]}=>{_b}')
         return i
 
     def printinfostats(self):
