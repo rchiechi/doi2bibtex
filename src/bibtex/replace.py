@@ -1,70 +1,36 @@
 # import os
 import re
 import mmap
-# import bibtexparser
-# import bibtexparser.middlewares as m
-# from .month import MonthIntStrMiddleware
+import shutil
+from colorama import Fore, Style
 from util import getlogger
 
 
 logger = getlogger(__name__)
 
-# layers = [
-#     m.LatexDecodingMiddleware(True),
-#     m.MonthIntMiddleware(True)
-# ]
-# 
-# def load_bib(bibtex, dedupe=False):
-#     logger.debug(f"Loading bib with dedupe={dedupe}")
-#     if os.path.exists(bibtex):
-#         library = bibtexparser.parse_file(bibtex, append_middleware=layers)
-#     else:
-#         library = bibtexparser.parse_string(bibtex, append_middleware=layers)
-#     if dedupe:
-#         return dedupe_bib_library(library)
-#     return library
-# 
-# import os
-# import re
-# import mmap
-# from .getlogger import return_logger
-# 
-# # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-# 
-# DOIREGEX = [re.compile(b'10.\d{4,9}/[-._;()/:A-Z0-9]+'),
-#             re.compile(b'10.1002/[^\s]+'),
-#             re.compile(b'10.\d{4}/\d+-\d+X?(\d+)\d+<[\d\w]+:[\d\w]*>\d+.\d+.\w+;\d'),
-#             re.compile(b'10.1021/\w\w\d++'),
-#             re.compile(b'10.1207/[\w\d]+\&\d+_\d+')]
-# 
-# logger = return_logger(__name__)
-# 
-# def find_doi(_str: str):
-#     if isinstance(_str, str):
-#         _str = bytes(_str, encoding='utf-8')
-#     if len(_str) < 255 and os.path.exists(_str):
-#         logger.debug(f'Searching file {_str} for dois')
-#         return find_doi_in_file(_str)
-#     logger.debug('Searching string for dois')
-#     return find_doi_in_bytearray(_str)
-# 
-# def find_doi_in_bytearray(textstring: bytearray):
-#     dois = []
-#     for regex in DOIREGEX:
-#         for _m in re.findall(regex, textstring):
-#             logger.debug(f"Found doi {_m}")
-#             dois.append(_m)
-#     return dois
 
 def replace_doi_in_file(fn, library, citecmd, trim=[]):
-    citecmd = citecmd.strip('\\')
+    citecmd = bytes(citecmd.strip('\\'), encoding='utf-8')
+    trim = [bytes(c, encoding='utf-8') for c in trim]
     doimap = {}
     for entry in library.entries:
-        try:
-            doimap[bytes(entry.fields_dict['doi'].value, encoding='utf-8')] = bytes(entry.key, encoding='utf-8')
-        except KeyError:
-            continue
-    _replace_with_trim(fn, doimap, [bytes(c, encoding='utf-8') for c in trim])
+        for _key in ('doi', 'DOI'):
+            try:
+                doimap[bytes(entry.fields_dict[_key].value, encoding='utf-8')] = bytes(entry.key, encoding='utf-8')
+            except KeyError:
+                continue
+    replacements = _replace_with_trim(fn, doimap, trim)
+    with open(fn, 'r+b') as fh:
+        _file = fh.read()
+    for rep in replacements:
+        _citecmd = rep[1].replace(trim[0], b'\\'+citecmd+b'{').replace(trim[1], b'}')
+        _file = _file.replace(rep[0], _citecmd)
+        print(f'{rep[0]} -> {_citecmd}')
+    _backup = f'{fn}.bak'
+    print(f'{Style.BRIGHT}{Fore.YELLOW}Backing up {Fore.CYAN}{fn}{Fore.YELLOW} as {Fore.CYAN}{_backup}')
+    shutil.copy(fn, _backup)
+    with open(fn, 'w+b') as fh:
+        fh.write(_file)
 
 def _replace_with_trim(fn, doimap, trim):
     if any(c for c in [b'[', b'}', b')'] if c in trim):
@@ -75,22 +41,10 @@ def _replace_with_trim(fn, doimap, trim):
     with open(fn, 'r+b') as fh:
         _file = mmap.mmap(fh.fileno(), 0) 
         for _m in re.findall(regex, _file):
+            _r = _m
             for doi in doimap:
-                if doi not in _m:
+                if not doi.upper() in _m.upper():
                     continue
-                _n = _m.replace(doi, doimap[doi]).strip(b','.join(trim))
-                print(f'{doi} -> {doimap[doi]} in {_m}')
-                print(_n)
-                replacements.append((_m, _n))
-    # print(replacements)
-    
-
-# def _replace_no_trim(fn, library, citecmd):
-#     with open(fn, 'r+b') as fh:
-#         # _file = mmap.mmap(fh.fileno(), 0)
-#         _file = fh.read()
-#         for entry in library.entries:
-#             doi = bytes(entry.field_dict['doi'].value, encoding='utf-8')
-#             # _citekey = b'\\'+citecmd+b'{'+'}
-#             # _file.replace(doi, b'\'+citecmd+b'{'+'}
-            
+                _r = _r.replace(doi, doimap[doi]).replace(doi.lower(), doimap[doi]).replace(doi.upper(), doimap[doi])
+            replacements.append([_m, _r])
+    return replacements
