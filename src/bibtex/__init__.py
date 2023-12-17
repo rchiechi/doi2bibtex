@@ -16,5 +16,5 @@ def dedupe(library):
 def clean(library, journals):
     return EntryCleaner(library, journals)
 
-def replacedois(fn, library, citecmd, trim=[]):
-    return replace_doi_in_file(fn, library, citecmd, trim=[])
+def replacedois(fn, library, citecmd, trim):
+    return replace_doi_in_file(fn, library, citecmd, trim)

@@ -13,7 +13,7 @@ parser.add_argument('--fromfile', metavar='find-dois-in-file', type=str,
                     help='Search a text file for dois.')
 parser.add_argument('--replace', action='store_true', default=False,
                     help="Replace DOIs in source document with \autocite{@key}.")
-parser.add_argument('--trim', nargs=2,
+parser.add_argument('--trim', nargs=2, default=['[',']'],
                     help="Trim these two characters surrounding DOIs on replace e.g., square braces from [DOI].")
 parser.add_argument('--citecmd', type=str, default='autocite',
                     help='Citekey to use when replacing DOIs.')

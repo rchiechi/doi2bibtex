@@ -61,28 +61,36 @@ def replace_doi_in_file(fn, library, citecmd, trim=[]):
     doimap = {}
     for entry in library.entries:
         try:
-            doimap[entry.fields_dict['doi'].value] = entry.key
+            doimap[bytes(entry.fields_dict['doi'].value, encoding='utf-8')] = bytes(entry.key, encoding='utf-8')
         except KeyError:
-            print(entry.fields_dict.keys())
-    _replace_with_trim(fn, doimap, trim)
+            continue
+    _replace_with_trim(fn, doimap, [bytes(c, encoding='utf-8') for c in trim])
 
 def _replace_with_trim(fn, doimap, trim):
-    regex = re.compile(bytes(trim[0])+b'.*?'+bytes(trim[1]))
-    replacemap = []
+    if any(c for c in [b'[', b'}', b')'] if c in trim):
+        regex = re.compile(b'\\'+trim[0]+b'.*?'+b'\\'+trim[1])
+    else:
+        regex = re.compile(trim[0]+b'.*?'+trim[1])
+    replacements = []
     with open(fn, 'r+b') as fh:
-        _file = mmap.mmap(fh.fileno(), 0)
+        _file = mmap.mmap(fh.fileno(), 0) 
         for _m in re.findall(regex, _file):
             for doi in doimap:
-                print(_m.replace(doi, doimap[doi]))
-                
+                if doi not in _m:
+                    continue
+                _n = _m.replace(doi, doimap[doi]).strip(b','.join(trim))
+                print(f'{doi} -> {doimap[doi]} in {_m}')
+                print(_n)
+                replacements.append((_m, _n))
+    # print(replacements)
     
 
-def _replace_no_trim(fn, library, citecmd):
-    with open(fn, 'r+b') as fh:
-        # _file = mmap.mmap(fh.fileno(), 0)
-        _file = fh.read()
-        for entry in library.entries:
-            doi = bytes(entry.field_dict['doi'].value, encoding='utf-8')
-            # _citekey = b'\\'+citecmd+b'{'+'}
-            # _file.replace(doi, b'\'+citecmd+b'{'+'}
+# def _replace_no_trim(fn, library, citecmd):
+#     with open(fn, 'r+b') as fh:
+#         # _file = mmap.mmap(fh.fileno(), 0)
+#         _file = fh.read()
+#         for entry in library.entries:
+#             doi = bytes(entry.field_dict['doi'].value, encoding='utf-8')
+#             # _citekey = b'\\'+citecmd+b'{'+'}
+#             # _file.replace(doi, b'\'+citecmd+b'{'+'}
             
