@@ -24,8 +24,8 @@ if args.bibtexfile:
     logger.debug(f"Parsed {len(library.entries)} from {args.bibtexfile}.")
 
 dois = list(args.dois)
-if args.fromfile:
-    dois += util.doifinder(args.fromfile)
+if args.doifile:
+    dois += util.doifinder(args.doifile)
     logger.debug(dois)
 
 added = 0
@@ -47,8 +47,8 @@ if library is not None:
         print(f"{Style.BRIGHT}{Fore.RED}No journals parsed, cannot clean.")
     if args.dedupe:
         library = bibtex.dedupe(library)
-    if args.replace and args.fromfile:
-        bibtex.replacedois(args.fromfile, library, args.citecmd, args.trim)
+    if args.replace and args.doifile:
+        bibtex.replacedois(args.doifile, library, args.citecmd, args.trim)
     if args.bibtexfile:
         if interact.ask(f"Save library to {args.bibtexfile}?"):
             bibtex.write(library, args.bibtexfile)

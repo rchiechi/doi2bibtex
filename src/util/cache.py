@@ -3,7 +3,8 @@ import os
 import re
 import tempfile
 import pickle
-import requests
+import urllib.request
+from urllib.error import HTTPError
 from .getlogger import return_logger
 
 logger = return_logger(__name__)
@@ -42,11 +43,14 @@ def loadcache(database, **kwargs):
     journals = {}
     if not os.path.exists(JCACHE):
         logger.debug('Fetching list of common journal abbreviations.')
-        _r = requests.get(database)
-        if _r.status_code != 200:
-            logger.error("Error fetching journal abbreviations with code %s", _r.status_code)
-        else:
-            journals = parseabbreviations(_r.text.split('\n'))
+        req = urllib.request.Request(database)
+        try:
+            with urllib.request.urlopen(req) as f:
+                _r = f.read().decode()
+            journals = parseabbreviations(_r.split('\n'))
+        except HTTPError as err:
+            logger.error("Error fetching journal abbreviations with code %s", err.code)
+            journals = {}
     else:
         try:
             journals = pickle.load(open(JCACHE,'rb'))

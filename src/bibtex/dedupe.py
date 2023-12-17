@@ -1,10 +1,8 @@
-from colorama import init,Fore,Style,Back
+from colorama import Fore,Style,Back
 from util import getlogger
 
 logger = getlogger(__name__)
 
-# Setup colors
-init(autoreset=True)
 
 def dedupe_bib_library(library):
     '''Check for duplicate bibtex entries'''

@@ -3,7 +3,9 @@ import urllib.request
 from urllib.error import HTTPError
 from .getlogger import return_logger
 
-BASE_URL='https://abbreviso.toolforge.org/abbreviso/a'
+BASE_URL = 'https://abbreviso.toolforge.org/abbreviso/a'
+
+logger = return_logger(__name__)
 
 def query_abbreviso(journal):
     url = f'{BASE_URL}/{urllib.parse.quote(journal)}'

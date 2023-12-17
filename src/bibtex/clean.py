@@ -1,15 +1,9 @@
-'''The main class for parsing BiBTeX records'''
-import sys
-import Levenshtein  # pip3 install python-levenshtein
+import Levenshtein
 from titlecase import titlecase
-from colorama import init,Fore,Style
+from colorama import Fore,Style
 from util import getlogger, getISO4
 
 logger = getlogger(__name__)
-
-# Setup colors
-init(autoreset=True)
-
 
 class EntryCleaner:
 
