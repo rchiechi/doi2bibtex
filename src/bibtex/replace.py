@@ -1,8 +1,6 @@
 # import os
 import re
 import mmap
-import shutil
-from colorama import Fore, Style
 from util import getlogger
 
 
@@ -26,11 +24,12 @@ def replace_doi_in_file(fn, library, citecmd, trim=[]):
         _citecmd = rep[1].replace(trim[0], b'\\'+citecmd+b'{').replace(trim[1], b'}')
         _file = _file.replace(rep[0], _citecmd)
         print(f'{rep[0]} -> {_citecmd}')
-    _backup = f'{fn}.bak'
-    print(f'{Style.BRIGHT}{Fore.YELLOW}Backing up {Fore.CYAN}{fn}{Fore.YELLOW} as {Fore.CYAN}{_backup}')
-    shutil.copy(fn, _backup)
-    with open(fn, 'w+b') as fh:
-        fh.write(_file)
+    return _file
+    # _backup = f'{fn}.bak'
+    # print(f'{Style.BRIGHT}{Fore.YELLOW}Backing up {Fore.CYAN}{fn}{Fore.YELLOW} as {Fore.CYAN}{_backup}')
+    # shutil.copy(fn, _backup)
+    # with open(fn, 'w+b') as fh:
+    #     fh.write(_file)
 
 def _replace_with_trim(fn, doimap, trim):
     if any(c for c in [b'[', b'}', b')'] if c in trim):
@@ -39,7 +38,7 @@ def _replace_with_trim(fn, doimap, trim):
         regex = re.compile(trim[0]+b'.*?'+trim[1])
     replacements = []
     with open(fn, 'r+b') as fh:
-        _file = mmap.mmap(fh.fileno(), 0) 
+        _file = mmap.mmap(fh.fileno(), 0)
         for _m in re.findall(regex, _file):
             _r = _m
             for doi in doimap:

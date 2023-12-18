@@ -13,13 +13,10 @@ layers = [
     m.LatexEncodingMiddleware(True)
 ]
 
-
-
 def do_bibtexdb(library, args):
     journals = util.loadabbreviations(args.database,
                                       custom=args.custom,
                                       refresh=args.refresh)
-    print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
     if args.clean and journals:
         cleaner = bibtex.clean(library, journals)
         library = cleaner.clean()
@@ -29,11 +26,8 @@ def do_bibtexdb(library, args):
         print(f"{Style.BRIGHT}{Fore.RED}No journals parsed, cannot clean.")
     if args.dedupe:
         library = bibtex.dedupe(library)
-    if args.replace and args.doifile:
-        bibtex.replacedois(args.doifile, library, args.citecmd, args.trim)
-    if args.bibtexfile:
-        if interact.ask(f"Save library to {args.bibtexfile}?"):
-            write_bib(library, args.bibtexfile)
+    if interact.ask(f"Save library to {args.out}?"):
+        write_bib(library, args.out)
 
 
 def write_bib(library: bibtexparser.library, db: str):

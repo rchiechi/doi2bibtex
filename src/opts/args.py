@@ -9,11 +9,12 @@ class MyParser(argparse.ArgumentParser):
         self.print_help(sys.stderr)
         sys.exit(2)
 
+
 desc = '''
         A python script for interacting with DOIs and bibtex.
        '''
 
-epilog= '''
+epilog = '''
         Invoke a subcommand with -h to see options specific to that command.
         '''
 
@@ -46,9 +47,9 @@ subparser_bibtexdb = subparsers.add_parser('bibtexdb', help='Write output to a b
 subparser_bibtexdb.add_argument('-o', '--out', metavar='output file', type=str,
                                 help='File to write to (defaults to input bibtexdb file, if provided).')
 subparser_bibtexdb.add_argument('--clean', action='store_true', default=False,
-                    help="Clean bibtex db entries (implies dedupe).")
+                                help="Clean bibtex db entries (implies dedupe).")
 subparser_bibtexdb.add_argument('--dedupe', action='store_true', default=False,
-                    help='Dedupe the bibtex library.')
+                                help='Dedupe the bibtex library.')
 
 # # #  HTML subparser options # # #
 subparser_html = subparsers.add_parser('html', help='Write output to HTML.')
@@ -65,17 +66,25 @@ subparser_textfile = subparsers.add_parser('textfile', help='Write output to a s
 subparser_textfile.add_argument('-o', '--out', metavar='output file', type=str,
                                 help='File to write to (defaults to input doi file, if provided).')
 subparser_textfile.add_argument('--replace', action='store_true', default=False,
-                    help="Replace DOIs in source document with \autocite{@key}.")
+                                help="Replace DOIs in source document with \autocite{@key}. Requires --doifile.")
 subparser_textfile.add_argument('--trim', nargs=2, default=['[',']'],
-                    help="Trim these two characters surrounding DOIs on replace e.g., square braces from [DOI].")
+                                help="Trim these two characters surrounding DOIs on replace e.g., square braces from [DOI].")
 subparser_textfile.add_argument('--citecmd', type=str, default='autocite',
-                    help='Citekey to use when replacing DOIs.')
+                                help='Citekey to use when replacing DOIs.')
 
 
 opts = parser.parse_args()
 if opts.outputmode == 'bibtexdb':
     if opts.clean:
         opts.dedue = True
+    if not opts.bibtexdb and not opts.out:
+        opts.out = 'doi2bibtex.bib'
+    elif opts.bibtexdb and not opts.out:
+        opts.out = opts.bibtexdb
 if opts.outputmode == 'textfile':
-    if opts.doifile and not opts.out:
+    if opts.replace and not opts.doifile:
+        parser.error('--replace requires --doifile')
+    if not opts.doifile and not opts.out:
+        opts.out = 'doi2bibtex.txt'
+    elif opts.doifile and not opts.out:
         opts.out = opts.doifile

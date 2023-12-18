@@ -3,7 +3,6 @@
 import opts
 import util
 import bibtex
-import interact
 import output
 from colorama import init, Fore, Style
 
@@ -15,11 +14,6 @@ args = opts.getopts()
 logger = util.getlogger('doi2bib', root=True, loglevel=args.loglevel)
 
 logger.debug("Debug logging enabled.")
-
-# journals = util.loadabbreviations(args.database,
-#                                   custom=args.custom,
-#                                   refresh=args.refresh)
-
 
 if args.bibtexdb:
     library = bibtex.read(args.bibtexdb)
@@ -39,9 +33,7 @@ for doi in dois:
         library.add(bibtex.read(result).entries)
         logger.debug(f"Added {doi} to library")
         added += 1
+if added:
+    print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
 
 getattr(output, args.outputmode)(library, args)
-# if args.outputmode == 'bibtexdb':
-#     output.bibtexdb(library, args)
-# if args.outputmode == 'clipboard':
-#     output.clipboard(library, args)

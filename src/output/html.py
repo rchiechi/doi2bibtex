@@ -4,25 +4,13 @@ import argparse
 # import cgi
 import datetime
 import urllib.parse
+from titlecase import titlecase
+import bibtexparser
+import colorama as cm
 
-try:
-    from titlecase import titlecase
-    import bibtexparser
-    from bibtexparser.bparser import BibTexParser
-    # from bibtexparser.bwriter import BibTexWriter
-    # from bibtexparser.bibdatabase import BibDatabase
-    # from bibtexparser.customization import page_double_hyphen
-    # from bibtexparser.latexenc import string_to_latex
-    import colorama as cm
-    import latexcodec #pylint: disable=unused-import
 
-except ImportError as msg:
-    print("Error importing package: %s" % str(msg))
-    sys.exit(1)
-
-    # Setup colors
-cm.init(autoreset=True)
-
+def do_html(library, args):
+    return
 
 class RecordHandler():
 
@@ -192,51 +180,51 @@ class RecordHandler():
             self.formatted['books']['2018'].append(record)
 
 # Parse args
-desc = 'Convert a BibTeX database to HTML.'
-
-parser = argparse.ArgumentParser(
-    description=desc,
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-parser.add_argument('infile', type=str, nargs=1, default=[],
-    help='Bibtex file to parse.')
-parser.add_argument('-b', '--boldname', type=str, default='',
-    help='Authors containing this string will be bolded.')
-parser.add_argument('--strong', action="store_true", default=False,
-    help='Use <strong> instead of <b>')
-parser.add_argument('--em', action="store_true", default=False,
-    help='Use <em> instead of <i>')
-parser.add_argument('--span', action="store_true", default=False,
-    help='Use <span> instead of <i>, <br>, etc.')
-parser.add_argument('--linebreaks', action="store_true", default=False,
-    help='Use linebreaks in HTML output.')
-parser.add_argument('-o', '--out', type=str, default='',
-    help='Write output to html file instead of stdout.')
-
-opts=parser.parse_args()
-if not opts.infile:
-    print('%sI need a bib file to parse!' % cm.Fore.RED)
-    sys.exit()
-elif not os.path.exists(opts.infile[0]):
-    print('%s%s does not exist!' % (cm.Fore.RED,opts.infile[0]))
-
-
-BIBFILE=os.path.abspath(opts.infile[0])
-parser = BibTexParser(common_strings=True)
-records = RecordHandler(opts)
-parser.customization = records.handle_record
-print('%s # # # # %s\n' % (cm.Style.BRIGHT,cm.Style.RESET_ALL) )
-with open(BIBFILE) as fh:
-    try:
-        bib_database = bibtexparser.load(fh, parser=parser)
-    except KeyError as msg:
-        print("Error opening bib file: KeyErorr, %s" % str(msg))
-        sys.exit(1)
-print('\n%s # # # # %s' % (cm.Style.BRIGHT,cm.Style.RESET_ALL) )
-
-if opts.out:
-    with open(opts.out, 'w') as fh:
-        fh.write(records.outputHTML())
-else:
-    print('* * * * * * * * * * * * * * * * * * * * * * * * * * *\n')
-    print(records.outputHTML())
+# desc = 'Convert a BibTeX database to HTML.'
+# 
+# parser = argparse.ArgumentParser(
+#     description=desc,
+#     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+# 
+# parser.add_argument('infile', type=str, nargs=1, default=[],
+#     help='Bibtex file to parse.')
+# parser.add_argument('-b', '--boldname', type=str, default='',
+#     help='Authors containing this string will be bolded.')
+# parser.add_argument('--strong', action="store_true", default=False,
+#     help='Use <strong> instead of <b>')
+# parser.add_argument('--em', action="store_true", default=False,
+#     help='Use <em> instead of <i>')
+# parser.add_argument('--span', action="store_true", default=False,
+#     help='Use <span> instead of <i>, <br>, etc.')
+# parser.add_argument('--linebreaks', action="store_true", default=False,
+#     help='Use linebreaks in HTML output.')
+# parser.add_argument('-o', '--out', type=str, default='',
+#     help='Write output to html file instead of stdout.')
+# 
+# opts=parser.parse_args()
+# if not opts.infile:
+#     print('%sI need a bib file to parse!' % cm.Fore.RED)
+#     sys.exit()
+# elif not os.path.exists(opts.infile[0]):
+#     print('%s%s does not exist!' % (cm.Fore.RED,opts.infile[0]))
+# 
+# 
+# BIBFILE=os.path.abspath(opts.infile[0])
+# parser = BibTexParser(common_strings=True)
+# records = RecordHandler(opts)
+# parser.customization = records.handle_record
+# print('%s # # # # %s\n' % (cm.Style.BRIGHT,cm.Style.RESET_ALL) )
+# with open(BIBFILE) as fh:
+#     try:
+#         bib_database = bibtexparser.load(fh, parser=parser)
+#     except KeyError as msg:
+#         print("Error opening bib file: KeyErorr, %s" % str(msg))
+#         sys.exit(1)
+# print('\n%s # # # # %s' % (cm.Style.BRIGHT,cm.Style.RESET_ALL) )
+# 
+# if opts.out:
+#     with open(opts.out, 'w') as fh:
+#         fh.write(records.outputHTML())
+# else:
+#     print('* * * * * * * * * * * * * * * * * * * * * * * * * * *\n')
+#     print(records.outputHTML())
