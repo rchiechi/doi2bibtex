@@ -25,7 +25,8 @@ setuptools.setup(name='doi2bibtex',
                  install_requires=['bibtexparser>=2.0.0b4',
                                    'colorama>=0.4.6',
                                    'python-Levenshtein>=0.23.0',
-                                   'titlecase>=2.4.1'
+                                   'titlecase>=2.4.1',
+                                   'pyperclip>=1.8.2'
                                    ],
                  include_package_data=True,
                  scripts=[os.path.join("src", 'doi2bibtex')]

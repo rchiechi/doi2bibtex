@@ -3,20 +3,45 @@ import shutil
 import bibtexparser
 import bibtexparser.middlewares as m
 from colorama import Fore, Style
-from util import getlogger
-# import interact
+import util
+import bibtex
+import interact
 
-logger = getlogger(__name__)
+logger = util.getlogger(__name__)
 
 layers = [
     m.LatexEncodingMiddleware(True)
 ]
+
+
+
+def do_bibtexdb(library, args):
+    journals = util.loadabbreviations(args.database,
+                                      custom=args.custom,
+                                      refresh=args.refresh)
+    print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
+    if args.clean and journals:
+        cleaner = bibtex.clean(library, journals)
+        library = cleaner.clean()
+        journals.update(cleaner.custom)
+        util.updatecache(journals)
+    elif args.clean:
+        print(f"{Style.BRIGHT}{Fore.RED}No journals parsed, cannot clean.")
+    if args.dedupe:
+        library = bibtex.dedupe(library)
+    if args.replace and args.doifile:
+        bibtex.replacedois(args.doifile, library, args.citecmd, args.trim)
+    if args.bibtexfile:
+        if interact.ask(f"Save library to {args.bibtexfile}?"):
+            write_bib(library, args.bibtexfile)
+
 
 def write_bib(library: bibtexparser.library, db: str):
     if os.path.exists(db):
         _backup = f'{db}.bak'
         print(f'{Style.BRIGHT}{Fore.YELLOW}Backing up {Fore.CYAN}{db}{Fore.YELLOW} as {Fore.CYAN}{_backup}')
         shutil.copy(db, _backup)
-        # if not interact.overwrite(os.path.basename(db)):
-        #     return
-    bibtexparser.write_file(db, library, append_middleware=layers)
+    bibtex_format = bibtexparser.BibtexFormat()
+    bibtex_format.indent = '    '
+    bibtex_format.block_separator = '\n\n'
+    bibtexparser.write_file(db, library, bibtex_format=bibtex_format)
