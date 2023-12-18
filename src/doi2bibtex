@@ -11,6 +11,10 @@ from colorama import init, Fore, Style
 init(autoreset=True)
 
 args = opts.getopts()
+if not args.outputmode:
+    print(f'{Style.BRIGHT}No output mode selected.{Style.RESET_ALL}')
+    # args.printhelp()
+
 logger = util.getlogger('doi2bib', root=True, loglevel=args.loglevel)
 
 logger.debug("Debug logging enabled.")
