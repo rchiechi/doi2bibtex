@@ -26,7 +26,9 @@ def do_bibtexdb(library, args):
         print(f"{Style.BRIGHT}{Fore.RED}No journals parsed, cannot clean.")
     if args.dedupe:
         library = bibtex.dedupe(library)
-    if interact.ask(f"Save library to {args.out}?"):
+    if not library.entries:
+        print(f'{Style.BRIGHT}{Fore.YELLOW}Not writing empty library to file.')
+    elif interact.ask(f"Save library to {args.out}?"):
         write_bib(library, args.out)
 
 
@@ -39,3 +41,4 @@ def write_bib(library: bibtexparser.library, db: str):
     bibtex_format.indent = '    '
     bibtex_format.block_separator = '\n\n'
     bibtexparser.write_file(db, library, bibtex_format=bibtex_format)
+    print(f'{Style.BRIGHT}{Fore.YELLOW}Wrote {Fore.CYAN}{db}{Fore.YELLOW}.')
