@@ -4,6 +4,7 @@ import opts
 import util
 import bibtex
 import interact
+import output
 from colorama import init, Fore, Style
 
 # Setup colors
@@ -51,4 +52,4 @@ if library is not None:
         bibtex.replacedois(args.doifile, library, args.citecmd, args.trim)
     if args.bibtexfile:
         if interact.ask(f"Save library to {args.bibtexfile}?"):
-            bibtex.write(library, args.bibtexfile)
+            output.bibtexdb(library, args.bibtexfile)
