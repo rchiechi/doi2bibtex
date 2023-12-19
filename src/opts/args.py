@@ -20,7 +20,7 @@ epilog = '''
 
 parser = MyParser(description=desc, epilog=epilog,
                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--dois', metavar='dois-to-parse', type=str,
+parser.add_argument('--dois', metavar='dois-to-parse', type=str, default='',
                     help='DOIs to parse, comma-separated. For example --dois \'10.1234/journal1, 10.4567/journal2\'')
 parser.add_argument('--doifile', metavar='find-dois-in-file', type=str,
                     help='Search a text file for dois.')
