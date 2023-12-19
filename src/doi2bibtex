@@ -21,7 +21,7 @@ if args.bibtexdb:
 else:
     library = bibtex.read('')
 
-dois = list(args.dois)
+dois = list(map(str.strip, args.dois.split(',')))
 if args.doifile:
     dois += util.doifinder(args.doifile)
     logger.debug(dois)
