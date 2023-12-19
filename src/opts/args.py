@@ -55,6 +55,12 @@ subparser_bibtexdb.add_argument('--dedupe', action='store_true', default=False,
 subparser_html = subparsers.add_parser('html', help='Write output to HTML.')
 subparser_html.add_argument('-o', '--out', metavar='output file', type=str,
                             help='File to write to. Prints to stdout if not provided.')
+subparser_html.add_argument('--nospan', action='store_true', default=False,
+                            help='Use <b></b>, etc. instead of <span class=cxxx></span> for bold, italics, etc.')
+subparser_html.add_argument('--nobreaks', action='store_true', default=False,
+                            help='Do not insert line breaks for readabiltiy.')
+subparser_html.add_argument('-b', '--boldname', type=str, default='',
+                            help='Bold this name in HTML output.')
 
 # # #  Clipboard subparser options # # #
 subparser_clipboard = subparsers.add_parser('clipboard', help='Copy output to clipboard.')

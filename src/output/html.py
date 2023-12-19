@@ -1,16 +1,101 @@
-import sys
-import os
-import argparse
-# import cgi
-import datetime
-import urllib.parse
+import util
+from datetime import datetime as dt
+from colorama import Fore, Style
 from titlecase import titlecase
-import bibtexparser
-import colorama as cm
-
 
 def do_html(library, args):
-    return
+    html = ''
+    formatted = {'journals':{},'books':{},'patents':{}}
+    format = {'bold': ('<span class="c3">','</span>'),
+              'italics': ('<span class="c1">','</span>'),
+              'heading': ('<h3>','</h3>'),
+              'normal': ('<span class="c2">','</span>')}
+    if args.nospan:
+        format['bold'] = ('<b>','</b>')
+        format['italics'] = ('<i>','</i>')
+        format['heading'] = format['bold']
+        format['normal'] = (',')
+
+    for entry in library.entries:
+        if entry.entry_type.lower() != 'article':
+            print(f'{Fore.RED}Cannot parse {entry.key} ({entry.entry_type})')
+            continue
+        doi = None
+        for key in ('doi', 'DOI'):
+            if key in entry.fields_dict:
+                doi = entry.fields_dict[key]
+        if doi is None:
+            print(f'{Fore.RED}Missing DOI for {entry.key} ({entry.entry_type})')
+            _href = util.doitolink(doi)
+        else:
+            _href = '/'
+        try:
+            year = int(entry.fields_dict['year'])
+        except ValueError:
+            year = dt.now().year
+            print("Warning %s is non-numerical year, setting to %s." % (entry.fields_dict['year'], year))
+
+        clean_title = '<A href="%s" target="_blank">%s</A>' % (_href, titlecase(cleanLatex(entry.fields_dict['title'])))
+        clean_authors = parseAuthors(entry.fields_dict['author'], args.boldname, format)
+        clean_journal = '%s%s%s' % (format['italics'][0], cleanLatex(entry.fields_dict['journal']), format['italics'][1])
+        clean_pages = cleanLatex(entry.fields_dict['pages'])
+        clean_volume = '%s%s%s' % (format['italics'][0], cleanLatex(entry.fields_dict['volume']), format['italics'][1])
+        clean_year = '%s%s%s' % (format['bold'][0], cleanLatex(year), format['bold'][1])
+        _formatted = '%s %s. %s %s, %s, %s' % (clean_authors,
+                                               clean_title, clean_journal,
+                                               clean_year, clean_volume, clean_pages)
+        if year not in formatted['journals']:
+            formatted['journals'][year] = [_formatted]
+        else:
+            formatted['journals'][year].append(_formatted)
+    html = outputHTML(formatted, format, args.linebreaks)
+    return html
+
+def outputHTML(formatted, format, linebreaks):
+    html = []
+    years = list(formatted['journals'].keys())
+    years.sort(reverse=True)
+
+    html.append('<ol>')
+    for _year in years:
+        html.append('%s%s%s' % (format['heading'][0], _year, format['heading'][1]))
+        for _pub in formatted['journals'][_year]:
+            html.append('<li>')
+            html.append('<p>%s</p>' % _pub)
+            html.append('</li>')
+    html.append('</ol>')
+
+    if linebreaks:
+        return '\n'.join(html)
+    else:
+        return ''.join(html)
+
+def cleanLatex(latex):
+    _raw = r'{}'.format(latex)
+    for _r in (('{',''),('}',''),('--','-')):
+        _raw = _raw.replace(_r[0],_r[1])
+    cleaned = bytes(_raw, encoding='utf8').decode('latex')
+    return str(cleaned).strip()
+
+def parseAuthors(authors, boldname, format):
+    _authorlist = []
+    for _author in (authors.split('and')):
+        _s = cleanLatex(_author)
+        if ',' not in _s:
+            _s = '%s, %s' % (_s.split(' ')[-1], ' '.join(_s.split(' ')[:-1]))
+        if boldname and (boldname in _s):
+            _s = '%s%s%s' % (format['bold'][0], _s, format['bold'][1])
+        _authorlist.append(_s)
+    return "%s%s%s" % (format['normal'][0], '; '.join(_authorlist), format['normal'][1])
+
+
+# def parseNonjournal(entry):
+#     # TODO: actually parse non-journals
+#     print(f'{Style.BRIGHT}Pretending to parse non-journal')
+#     if not self.formatted['books']:
+#         self.formatted['books']={'2018':[record]}
+#     else:
+#         self.formatted['books']['2018'].append(record)
 
 class RecordHandler():
 
@@ -89,21 +174,21 @@ class RecordHandler():
             if key not in record:
                 if 'ENTRYTYPE' in record:
                     if record['ENTRYTYPE'] in ('article','journal'):
-                        print('%sJournal entry missing %s' % (cm.Fore.RED,key))
+                        print('%sJournal entry missing %s' % (Fore.RED,key))
                         record[key]=''
 
                     else:
                         self.__parseNonjournal(record)
                         return False
                 else:
-                    print('%sCannot parse unknown entry.' % cm.Fore.RED)
+                    print('%sCannot parse unknown entry.' % Fore.RED)
                     print(record)
                     return False
 
         try:
             year = int(record['year'])
         except ValueError:
-            year = datetime.datetime.now().year
+            year = dt.now().year
             print("Warning %s is non-numerical year, setting to %s." % (record['year'],year))
         clean_title = titlecase(self.__cleanLatex(record['title']))
         clean_doi = str()
