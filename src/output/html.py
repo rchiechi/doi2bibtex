@@ -87,9 +87,10 @@ def _finddoi(entry):
             _uri = str(entry.fields_dict[_key].value)
             m = re.search(REDOIURI, _uri)
             if m is not None:
-                doi = re.sub(REDOIURI, _uri, '')
+                doi = _uri[m.span(0)[1]:]
+            if doi:
                 break
-    return doi
+    return doi or None
 
 def _HTMLblock(formatted, textf, nobreaks):
     html = []

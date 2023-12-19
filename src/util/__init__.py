@@ -24,4 +24,4 @@ def getISO4(journal):
     return query_abbreviso(journal)
 
 def doitolink(doi):
-    return urllib.parse.quote(f'https://dx.doi.org/{doi}')
+    return 'https://dx.doi.org/'+urllib.parse.quote(doi)
