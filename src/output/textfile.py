@@ -1,6 +1,5 @@
-import os
-import shutil
 import bibtex
+from .filewriter import backupandwrite
 import bibtexparser
 from colorama import Fore, Style
 
@@ -17,10 +16,4 @@ def do_textfile(library, args):
     if not _file:
         print(f'{Style.BRIGHT}{Fore.YELLOW}Not writing empty file.')
         return
-    if os.path.exists(args.out):
-        _backup = f'{args.out}.bak'
-        print(f'{Style.BRIGHT}{Fore.YELLOW}Backing up {Fore.CYAN}{args.out}{Fore.YELLOW} as {Fore.CYAN}{_backup}')
-        shutil.copy(args.out, _backup)
-    with open(args.out, 'w+b') as fh:
-        fh.write(_file)
-        print(f'{Style.BRIGHT}{Fore.YELLOW}Wrote {Fore.CYAN}{args.out}{Fore.YELLOW}.')
+    backupandwrite(args.out, _file)
