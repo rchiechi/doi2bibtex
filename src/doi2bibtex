@@ -27,7 +27,9 @@ if args.doifile:
     logger.debug(dois)
 
 added = 0
-for doi in dois:
+for doi in dois + args.more_dois:
+    if not doi:
+        continue
     result = util.doitobibtex(doi)
     if result:
         library.add(bibtex.read(result).entries)

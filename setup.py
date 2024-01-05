@@ -26,6 +26,7 @@ setuptools.setup(name='doi2bibtex',
                                    'colorama>=0.4.6',
                                    'python-Levenshtein>=0.23.0',
                                    'titlecase>=2.4.1',
+                                   'latexcodec>=2.0.1',
                                    'pyperclip>=1.8.2',
                                    'pylatexenc>=2.10'
                                    ],
