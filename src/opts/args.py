@@ -82,8 +82,8 @@ subparser_textfile.add_argument('more_dois', type=str, nargs='*', default=[],
                                 help='Additional DOIs supplied on the command line.')
 subparser_textfile.add_argument('-o', '--out', metavar='output file', type=str,
                                 help='File to write to (defaults to input doi file, if provided).')
-subparser_textfile.add_argument('--replace', action='store_true', default=False,
-                                help="Replace DOIs in source document with \autocite{@key}. Requires --doifile.")
+subparser_textfile.add_argument('--replace', type=str,
+                                help="Replace DOIs in source document with \autocite{@key} and write to provided bibtexdb. Requires --doifile.")
 subparser_textfile.add_argument('--trim', nargs=2, default=['[',']'],
                                 help="Trim these two characters surrounding DOIs on replace e.g., square braces from [DOI].")
 subparser_textfile.add_argument('--citecmd', type=str, default='autocite',
