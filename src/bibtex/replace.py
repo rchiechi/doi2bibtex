@@ -29,11 +29,7 @@ def replace_doi_in_file(fn, library, citecmd, trim=[]):
         _file = _file.replace(rep[0], _citecmd)
         print(f'{rep[0]} -> {_citecmd}')
     return _file
-    # _backup = f'{fn}.bak'
-    # print(f'{Style.BRIGHT}{Fore.YELLOW}Backing up {Fore.CYAN}{fn}{Fore.YELLOW} as {Fore.CYAN}{_backup}')
-    # shutil.copy(fn, _backup)
-    # with open(fn, 'w+b') as fh:
-    #     fh.write(_file)
+
 
 def _replace_with_trim(fn, doimap, trim):
     if any(c for c in [b'[', b'}', b')'] if c in trim):
