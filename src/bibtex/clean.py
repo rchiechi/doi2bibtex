@@ -49,7 +49,7 @@ class EntryCleaner:
         if 'author' in entry.fields_dict:
             if ' and ' not in entry.fields_dict['author'].value and ',' in entry.fields_dict['author'].value:
                 authors = []
-                for author in entry.fields_dict['author'].split(','):
+                for author in entry.fields_dict['author'].value.split(','):
                     authors.append('{'+author.strip()+'}')
                 entry.fields_dict['author'].value = " and ".join(authors)
         if entry.fields_dict['journal'] in list(self.journals.values()):
@@ -69,7 +69,15 @@ class EntryCleaner:
         else:
             if score < 0.9:
                 fuzzy = getISO4(entry.fields_dict['journal'].value)
-                logger.debug(f'Using ISO4 "{fuzzy}"')
+                if fuzzy == entry.fields_dict['journal'].value:
+                    _abbrev = True
+                if entry.fields_dict['journal'].value.replace('.', ',') == fuzzy:
+                    logger.debug('ISO4 is just replacing . with , for some reason.')
+                    fuzzy = entry.fields_dict['journal'].value
+                    _abbrev = True
+                else:
+                    logger.debug(f'Using ISO4 "{fuzzy}"')
+        if not _abbrev:
             try:
                 _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s" or something else? ' % (
                     score * 100, Style.BRIGHT + Fore.YELLOW,

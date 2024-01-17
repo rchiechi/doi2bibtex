@@ -42,3 +42,5 @@ subcommands:
     clipboard           Copy output to clipboard.
     textfile            Write output to a standard text file.
 ```
+
+You can also feed it more DOIs on the command line after the subcommand.

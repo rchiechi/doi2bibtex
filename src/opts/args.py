@@ -44,6 +44,8 @@ subparsers = parser.add_subparsers(help='sub-command help', required=True, dest=
 # # # Bibtexdb subparser options # # #
 subparser_bibtexdb = subparsers.add_parser('bibtexdb', help='Write output to a bibtex databse')
 
+subparser_bibtexdb.add_argument('more_dois', type=str, nargs='*', default=[],
+                                help='Additional DOIs supplied on the command line.')
 subparser_bibtexdb.add_argument('-o', '--out', metavar='output file', type=str,
                                 help='File to write to (defaults to input bibtexdb file, if provided).')
 subparser_bibtexdb.add_argument('--clean', action='store_true', default=False,
@@ -53,6 +55,9 @@ subparser_bibtexdb.add_argument('--dedupe', action='store_true', default=False,
 
 # # #  HTML subparser options # # #
 subparser_html = subparsers.add_parser('html', help='Write output to HTML.')
+
+subparser_html.add_argument('more_dois', type=str, nargs='*', default=[],
+                            help='Additional DOIs supplied on the command line.')
 subparser_html.add_argument('-o', '--out', metavar='output file', type=str,
                             help='File to write to. Prints to stdout if not provided.')
 subparser_html.add_argument('--nospan', action='store_true', default=False,
@@ -64,15 +69,21 @@ subparser_html.add_argument('-b', '--boldname', type=str, default='',
 
 # # #  Clipboard subparser options # # #
 subparser_clipboard = subparsers.add_parser('clipboard', help='Copy output to clipboard.')
+
+subparser_clipboard.add_argument('more_dois', type=str, nargs='*', default=[],
+                                 help='Additional DOIs supplied on the command line.')
 subparser_clipboard.add_argument('--stdout', action='store_true', default=False,
                                  help='Write to stdout instead of cliboard.')
 
 # # #  Textfile subparser options # # #
 subparser_textfile = subparsers.add_parser('textfile', help='Write output to a standard text file.')
+
+subparser_textfile.add_argument('more_dois', type=str, nargs='*', default=[],
+                                help='Additional DOIs supplied on the command line.')
 subparser_textfile.add_argument('-o', '--out', metavar='output file', type=str,
                                 help='File to write to (defaults to input doi file, if provided).')
-subparser_textfile.add_argument('--replace', action='store_true', default=False,
-                                help="Replace DOIs in source document with \autocite{@key}. Requires --doifile.")
+subparser_textfile.add_argument('--replace', type=str,
+                                help="Replace DOIs in source document with \autocite{@key} and write to provided bibtexdb. Requires --doifile.")
 subparser_textfile.add_argument('--trim', nargs=2, default=['[',']'],
                                 help="Trim these two characters surrounding DOIs on replace e.g., square braces from [DOI].")
 subparser_textfile.add_argument('--citecmd', type=str, default='autocite',
