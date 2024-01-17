@@ -69,6 +69,8 @@ class EntryCleaner:
         else:
             if score < 0.9:
                 fuzzy = getISO4(entry.fields_dict['journal'].value)
+                if fuzzy == entry.fields_dict['journal'].value:
+                    _abbrev = True
                 if entry.fields_dict['journal'].value.replace('.', ',') == fuzzy:
                     logger.debug('ISO4 is just replacing . with , for some reason.')
                     fuzzy = entry.fields_dict['journal'].value

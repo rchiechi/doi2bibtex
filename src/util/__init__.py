@@ -3,7 +3,7 @@ from .doitobibtex import get_bibtex_from_url
 from .getlogger import return_logger
 from .doifinder import find_doi
 from .cache import loadcache, writetodisk
-from .abbreviso import query_abbreviso
+from .abbreviso import local_iso4
 
 def doitobibtex(doi):
     return get_bibtex_from_url(doi)
@@ -21,7 +21,7 @@ def updatecache(journals):
     return writetodisk(journals)
 
 def getISO4(journal):
-    return query_abbreviso(journal)
+    return local_iso4(journal)
 
 def doitolink(doi):
     return urllib.parse.quote(f'https://dx.doi.org/{doi}')
