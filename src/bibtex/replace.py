@@ -22,8 +22,8 @@ def replace_doi_in_file(fn, library, citecmd, trim=[]):
     with open(fn, 'r+b') as fh:
         _file = fh.read()
     for rep in replacements:
-        if rep[0][1:4] != b'10.':
-            logger.debug(f'Not replacing non-doi {rep[0]}')
+        if rep[0].replace(b' ',b'')[1:4] != b'10.':
+            logger.warn(f'Not replacing non-doi {rep[0]}')
             continue
         _citecmd = rep[1].replace(trim[0], b'\\'+citecmd+b'{').replace(trim[1], b'}')
         _file = _file.replace(rep[0], _citecmd)
@@ -41,9 +41,10 @@ def _replace_with_trim(fn, doimap, trim):
         _file = mmap.mmap(fh.fileno(), 0)
         for _m in re.findall(regex, _file):
             _r = _m
+            logger.debug(f"considering {_m}")
             for doi in doimap:
                 if not doi.upper() in _m.upper():
                     continue
-                _r = _r.replace(doi, doimap[doi]).replace(doi.lower(), doimap[doi]).replace(doi.upper(), doimap[doi])
+                _r = _r.replace(doi, doimap[doi]).replace(doi.lower(), doimap[doi]).replace(doi.upper(), doimap[doi]).replace(b' ',b'')
             replacements.append([_m, _r])
     return replacements
