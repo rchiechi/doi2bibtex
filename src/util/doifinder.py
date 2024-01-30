@@ -28,9 +28,7 @@ def find_doi_in_bytearray(textstring: bytearray):
     for regex in DOIREGEX:
         for _m in re.findall(regex, textstring):
             logger.debug(f"Found doi {_m}")
-            if _m in dois:
-                logger.warn(f"Skipping duplicate DOI {_m}")
-            else:
+            if _m not in dois:
                 dois.append(_m)
     return dois
 
