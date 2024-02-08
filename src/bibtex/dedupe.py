@@ -6,26 +6,33 @@ logger = getlogger(__name__)
 
 def dedupe_bib_library(library):
     '''Check for duplicate bibtex entries'''
+    logger.debug("Starting dedupe run")
     for entry in library.failed_blocks:
         print(f"{Style.BRIGHT}Failed:{Fore.RED} {entry.key}")
     dedupe = []
     dupes = {}
     for entry in library.entries:
-        try:
-            _p = entry.fields_dict['pages'].value.split('-')[0].strip().strip('-')
-            _j, _v = entry.fields_dict['journal'].value, entry.fields_dict['volume'].value
-            _doi = entry.fields_dict['doi'].value
-            _key = entry.key
-            if _p and _v:
-                dedupe.append((_key, _p, _v, _j, _doi))
-        except KeyError:
+        _key, _p, _v, _j, _doi = entry.key, '', '', '', ''
+        for _field in entry.fields_dict:
+            if _field.lower() in ('page', 'pages'):
+                _p = entry.fields_dict[_field].value.split('-')[0].strip().strip('-')
+            if _field.lower() == 'journal':
+                _j = entry.fields_dict[_field].value
+            if _field.lower() == 'volume':
+                _v = entry.fields_dict[_field].value
+            if _field.lower() == 'doi':
+                _doi = entry.fields_dict[_field].value
+        if _p and _v or _doi:
+            dedupe.append((_key, _p, _v, _j, _doi))
+        else:
+            logger.warn(f'Cannot dedue {entry.key}')
             continue
     while dedupe:
         # Pop a dedupe tuple off the list
         _e = dedupe.pop()
         for _c in dedupe:
             # See if it overlaps with tuples in the list
-            if _e[1:3] == _c[1:3] or _e[4] == _c[4]:
+            if _e[1:3] == _c[1:3] and _e[4] == _c[4]:
                 # Create a dictionary of lists of potential dupes keyed by ID
                 if _e[0] in dupes:
                     dupes[_e[0]].append(_c)
