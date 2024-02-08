@@ -13,10 +13,9 @@ REDOIURI = re.compile('https?://(dx\\.)?doi\\.org/')
 def do_html(library, args):
     html = ''
     formatted = {'journals':{},'books':{},'patents':{}}
-    textf = {'bold': ('<span class="c3">','</span>'),
-             'italics': ('<span class="c1">','</span>'),
-             'heading': ('<h3>','</h3>'),
-             'normal': ('<span class="c2">','</span>')}
+    textf = {'bold': ('<b>','</b>'),
+             'italics': ('<i>','</i>'),
+             'heading': ('<h2','</h2>')}
     if args.nospan:
         textf['bold'] = ('<b>','</b>')
         textf['italics'] = ('<i>','</i>')
@@ -99,7 +98,7 @@ def _HTMLblock(formatted, textf, nobreaks):
 
     html.append('<ol>')
     for _year in years:
-        html.append('%s%s%s' % (textf['heading'][0], _year, textf['heading'][1]))
+        html.append('%s id="%s">%s%s' % (textf['heading'][0], _year, _year, textf['heading'][1]))
         for _pub in formatted['journals'][_year]:
             html.append('<li>')
             html.append('<p>%s</p>' % _pub)
@@ -112,7 +111,7 @@ def _HTMLblock(formatted, textf, nobreaks):
 
 def cleanLatex(latex):
     _raw = r'{}'.format(latex)
-    for _r in (('{',''),('}',''),('--','-')):
+    for _r in (('{',''),('}',''),('--','-'),('–', '-'),('—','-')):
         _raw = _raw.replace(_r[0],_r[1])
     try:
         cleaned = bytes(_raw, encoding='utf8').decode('latex')
@@ -130,7 +129,7 @@ def parseAuthors(authors, boldname, textf):
         if boldname and (boldname in _s):
             _s = '%s%s%s' % (textf['bold'][0], _s, textf['bold'][1])
         _authorlist.append(_s)
-    return "%s%s%s" % (textf['normal'][0], '; '.join(_authorlist), textf['normal'][1])
+    return '; '.join(_authorlist)
 
 def resolvedoi(doi, key='null'):
     entry = Entry('article', str(doi), [Field(key, '')])
