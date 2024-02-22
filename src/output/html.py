@@ -16,11 +16,11 @@ def do_html(library, args):
     textf = {'bold': ('<b>','</b>'),
              'italics': ('<i>','</i>'),
              'heading': ('<h2','</h2>')}
-    if args.nospan:
-        textf['bold'] = ('<b>','</b>')
-        textf['italics'] = ('<i>','</i>')
-        textf['heading'] = textf['bold']
-        textf['normal'] = (',')
+    # if args.nospan:
+    #     textf['bold'] = ('<b>','</b>')
+    #     textf['italics'] = ('<i>','</i>')
+    #     textf['heading'] = textf['bold']
+    #     textf['normal'] = (',')
 
     for entry in library.entries:
         year, _formatted = _parse_entry(entry, textf, args)
@@ -96,14 +96,14 @@ def _HTMLblock(formatted, textf, nobreaks):
     years = list(formatted['journals'].keys())
     years.sort(reverse=True)
 
-    html.append('<ol>')
+    # html.append('<ol>')
     for _year in years:
         html.append('%s id="%s">%s%s' % (textf['heading'][0], _year, _year, textf['heading'][1]))
         for _pub in formatted['journals'][_year]:
             html.append('<li>')
             html.append('<p>%s</p>' % _pub)
             html.append('</li>')
-    html.append('</ol>')
+    # html.append('</ol>')
 
     if nobreaks:
         return ''.join(html)

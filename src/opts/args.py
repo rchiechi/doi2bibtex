@@ -60,8 +60,8 @@ subparser_html.add_argument('more_dois', type=str, nargs='*', default=[],
                             help='Additional DOIs supplied on the command line.')
 subparser_html.add_argument('-o', '--out', metavar='output file', type=str,
                             help='File to write to. Prints to stdout if not provided.')
-subparser_html.add_argument('--nospan', action='store_true', default=False,
-                            help='Use <b></b>, etc. instead of <span class=cxxx></span> for bold, italics, etc.')
+# subparser_html.add_argument('--nospan', action='store_true', default=False,
+#                             help='Use <b></b>, etc. instead of <span class=cxxx></span> for bold, italics, etc.')
 subparser_html.add_argument('--nobreaks', action='store_true', default=False,
                             help='Do not insert line breaks for readabiltiy.')
 subparser_html.add_argument('-b', '--boldname', type=str, default='',
