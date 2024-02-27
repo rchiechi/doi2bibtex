@@ -4,6 +4,7 @@ from .getlogger import return_logger
 from .doifinder import find_doi
 from .cache import loadcache, writetodisk
 from .abbreviso import local_iso4
+from .LaTexAccents import AccentConverter
 
 def doitobibtex(doi):
     return get_bibtex_from_url(doi)
@@ -25,3 +26,6 @@ def getISO4(journal):
 
 def doitolink(doi):
     return 'https://dx.doi.org/'+urllib.parse.quote(doi)
+
+def latexAccentConverter():
+    return AccentConverter()

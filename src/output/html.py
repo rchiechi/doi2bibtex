@@ -5,10 +5,12 @@ from .filewriter import backupandwrite
 from datetime import datetime as dt
 from bibtexparser.model import Entry, Field
 from colorama import Fore, Style
-import latexcodec
+# import latexcodec
 from titlecase import titlecase
 
 REDOIURI = re.compile('https?://(dx\\.)?doi\\.org/')
+
+logger = util.getlogger(__name__)
 
 def do_html(library, args):
     html = ''
@@ -110,14 +112,17 @@ def _HTMLblock(formatted, textf, nobreaks):
     return '\n'.join(html)
 
 def cleanLatex(latex):
+    converter = util.latexAccentConverter()
     _raw = r'{}'.format(latex)
     for _r in (('{',''),('}',''),('--','-'),('–', '-'),('—','-')):
         _raw = _raw.replace(_r[0],_r[1])
     try:
-        cleaned = bytes(_raw, encoding='utf8').decode('latex')
+        # cleaned = bytes(_raw, encoding='utf8').decode('latex')
+        cleaned = converter.decode_Tex_Accents(_raw, utf8_or_ascii=1)
     except ValueError:
-        # print(f'{Style.BRIGHT}{Fore.RED}Error decoding {_raw} to latex')
-        cleaned = bytes(_raw, encoding='utf8')
+        logger.warn(f'Error decoding {_raw} to latex')
+        # cleaned = bytes(_raw, encoding='utf8')
+        cleaned = _raw
     return str(cleaned).strip()
 
 def parseAuthors(authors, boldname, textf):
