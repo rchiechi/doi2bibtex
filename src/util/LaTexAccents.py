@@ -1,5 +1,6 @@
 # Author: Hayk Aleksanyan
 # for transforming LaTex accents to their UTF8 equivalents
+# https://github.com/hayk314/LaTex-handler
 
 import re
 
