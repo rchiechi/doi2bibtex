@@ -2,6 +2,7 @@ from .read import load_bib
 from .dedupe import dedupe_bib_library
 from .clean import EntryCleaner
 from .replace import replace_doi_in_file
+from .openalex import get_cited, get_citing
 
 def read(fn, dedupe=False):
     return load_bib(fn, dedupe)

@@ -37,6 +37,11 @@ parser.add_argument('--database', type=str,
 parser.add_argument('--custom', action='append', default=[],
                     help="Custom abbreviations separated by equal signs, e.g., -c 'Journal of Kittens;J. Kitt.'"
                          "You can call this argument more than once. These will be cached.")
+parser.add_argument('--cited', action='store_true', default=False,
+                    help="Return the bibliographies of the papers in the input doi(s).")
+parser.add_argument('--citing', action='store_true', default=False,
+                    help="Return dois that cite the papers in the input doi(s).")
+
 #  Initialize Subparsers
 subparsers = parser.add_subparsers(help='sub-command help', required=True, dest='outputmode',
                                    description='Options specific to the selected output mode.')

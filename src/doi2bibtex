@@ -21,13 +21,18 @@ if args.bibtexdb:
 else:
     library = bibtex.read('')
 
-dois = list(map(str.strip, args.dois.split(',')))
+dois = list(map(str.strip, args.dois.split(','))) + args.more_dois
 if args.doifile:
     dois += util.doifinder(args.doifile)
     logger.debug(dois)
 
+if args.cited:
+    dois = bibtex.get_cited(dois)
+if args.citing:
+    dois = bibtex.get_citing(dois)
+
 added = 0
-for doi in dois + args.more_dois:
+for doi in dois:
     if not doi:
         continue
     result = util.doitobibtex(doi)
