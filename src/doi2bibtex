@@ -33,6 +33,7 @@ if args.citing:
 
 added = 0
 for doi in dois:
+    print('.', end='')
     if not doi:
         continue
     result = util.doitobibtex(doi)
@@ -40,6 +41,7 @@ for doi in dois:
         library.add(bibtex.read(result).entries)
         logger.debug(f"Added {doi} to library")
         added += 1
+print('')
 if added:
     print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
 
