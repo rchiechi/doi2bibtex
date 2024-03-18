@@ -14,7 +14,7 @@ doi2bibtex will:
 
 I wrote this for myself, to make it easier to compile bibliographic databases with collaborators who use disparate reference managers. Thus, it is only tested insofar as I use it.
 
-*Warning*:
+*Warning*: doi2bibtex cannot fetch page numbers from certain journals and publishers that do not formally use page-numbers, e.g., Wiley journals.
 
 #### installation:
 ```
