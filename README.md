@@ -6,7 +6,14 @@ doi2bibtex will:
     - Find duplicates
     - Replace journal names with ISO-4 abbreviations
 - Save changes to bibtex database
-- Replace doi entries with cite commands and keys from the source doi-containing file
+- Replace DOI entries with cite commands and keys from the source doi-containing file
+- Create a bibtex database containing all of the papers cited in the DOI(s) provided.
+- Create a bibtex database containing all of the papers that cite the DOI(s) provided.
+- Export a bibtex database as an HTML-formatted biblography (as an unordered list amenable to my website).
+
+I wrote this for myself, to make it easier to compile bibliographic databases with collaborators who use disparate reference managers. Thus, it is only tested insofar as I use it.
+
+*Warning*:
 
 #### installation:
 ```
@@ -16,7 +23,9 @@ cd /path/to/doi2bibtex
 
 #### Usage:
 ```
-doi2bibtex [-h] [--dois dois-to-parse] [--doifile find-dois-in-file] [--bibtexdb BIBTEXDB] [--loglevel {info,warning,error,debug}] [--refresh] [--database DATABASE] [--custom CUSTOM] {bibtexdb,html,clipboard,textfile} ...
+usage: doi2bibtex [-h] [--dois dois-to-parse] [--doifile find-dois-in-file] [--bibtexdb BIBTEXDB] [--loglevel {info,warning,error,debug}] [--refresh] [--database DATABASE] [--custom CUSTOM] [--cited]
+                  [--citing]
+                  {bibtexdb,html,clipboard,textfile} ...
 
 A python script for interacting with DOIs and bibtex.
 
@@ -31,6 +40,8 @@ options:
   --refresh             Refresh cached journal list. (default: False)
   --database DATABASE   Databse of journal abbreviations. (default: https://raw.githubusercontent.com/JabRef/abbrv.jabref.org/master/journals/journal_abbreviations_acs.csv)
   --custom CUSTOM       Custom abbreviations separated by equal signs, e.g., -c 'Journal of Kittens;J. Kitt.'You can call this argument more than once. These will be cached. (default: [])
+  --cited               Return the bibliographies of the papers in the input doi(s). (default: False)
+  --citing              Return dois that cite the papers in the input doi(s). (default: False)
 
 subcommands:
   Options specific to the selected output mode.
@@ -41,6 +52,8 @@ subcommands:
     html                Write output to HTML.
     clipboard           Copy output to clipboard.
     textfile            Write output to a standard text file.
+
+Invoke a subcommand with -h to see options specific to that command.
 ```
 
 You can also feed it more DOIs on the command line after the subcommand.

@@ -1,7 +1,7 @@
 from .bibtexdb import do_bibtexdb
 from .clipboard import do_clipboard
 from .textfile import do_textfile
-from .html import do_html
+from .list import do_html, do_textlist
 
 def bibtexdb(library, args):
     return do_bibtexdb(library, args)
@@ -14,3 +14,6 @@ def textfile(library, args):
 
 def html(library, args):
     return do_html(library, args)
+
+def textlist(library, args):
+    return do_textlist(library, args)

@@ -72,6 +72,18 @@ subparser_html.add_argument('--nobreaks', action='store_true', default=False,
 subparser_html.add_argument('-b', '--boldname', type=str, default='',
                             help='Bold this name in HTML output.')
 
+# # #  Text list subparser options # # #
+subparser_textlist = subparsers.add_parser('textlist', help='Write output to HTML.')
+
+subparser_textlist.add_argument('more_dois', type=str, nargs='*', default=[],
+                                help='Additional DOIs supplied on the command line.')
+subparser_textlist.add_argument('-o', '--out', metavar='output file', type=str,
+                                help='File to write to. Prints to stdout if not provided.')
+subparser_textlist.add_argument('-b', '--boldname', type=str, default='',
+                                help='Add asterisk to this name.')
+subparser_textlist.add_argument('-y', '--years', action='store_true', default=False,
+                                help='Include years as headers on separate lines.')
+
 # # #  Clipboard subparser options # # #
 subparser_clipboard = subparsers.add_parser('clipboard', help='Copy output to clipboard.')
 
