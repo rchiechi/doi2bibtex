@@ -10,6 +10,7 @@ doi2bibtex will:
 - Create a bibtex database containing all of the papers cited in the DOI(s) provided.
 - Create a bibtex database containing all of the papers that cite the DOI(s) provided.
 - Export a bibtex database as an HTML-formatted biblography (as an unordered list amenable to my website).
+- Export a numbered list of references.
 
 I wrote this for myself, to make it easier to compile bibliographic databases with collaborators who use disparate reference managers. Thus, it is only tested insofar as I use it.
 
@@ -25,7 +26,7 @@ cd /path/to/doi2bibtex
 ```
 usage: doi2bibtex [-h] [--dois dois-to-parse] [--doifile find-dois-in-file] [--bibtexdb BIBTEXDB] [--loglevel {info,warning,error,debug}] [--refresh] [--database DATABASE] [--custom CUSTOM] [--cited]
                   [--citing]
-                  {bibtexdb,html,clipboard,textfile} ...
+                  {bibtexdb,html,textlist,clipboard,textfile} ...
 
 A python script for interacting with DOIs and bibtex.
 
@@ -46,10 +47,11 @@ options:
 subcommands:
   Options specific to the selected output mode.
 
-  {bibtexdb,html,clipboard,textfile}
+  {bibtexdb,html,textlist,clipboard,textfile}
                         sub-command help
     bibtexdb            Write output to a bibtex databse
     html                Write output to HTML.
+    textlist            Write output to HTML.
     clipboard           Copy output to clipboard.
     textfile            Write output to a standard text file.
 
