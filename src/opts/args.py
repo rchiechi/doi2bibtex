@@ -91,6 +91,8 @@ subparser_clipboard.add_argument('more_dois', type=str, nargs='*', default=[],
                                  help='Additional DOIs supplied on the command line.')
 subparser_clipboard.add_argument('--stdout', action='store_true', default=False,
                                  help='Write to stdout instead of cliboard.')
+subparser_clipboard.add_argument('--noclean', action='store_true', default=False,
+                                 help='Do not convert unicode to LaTeX.')
 
 # # #  Textfile subparser options # # #
 subparser_textfile = subparsers.add_parser('textfile', help='Write output to a standard text file.')

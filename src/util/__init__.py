@@ -5,6 +5,7 @@ from .doifinder import find_doi
 from .cache import loadcache, writetodisk
 from .abbreviso import local_iso4
 from .LaTexAccents import AccentConverter
+from .encode import LatexEncoder
 
 def doitobibtex(doi):
     return get_bibtex_from_url(doi)
@@ -29,3 +30,6 @@ def doitolink(doi):
 
 def latexAccentConverter():
     return AccentConverter()
+
+def unicodeTolatex():
+    return LatexEncoder()

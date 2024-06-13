@@ -30,6 +30,9 @@ def do_bibtexdb(library, args):
         print(f'{Style.BRIGHT}{Fore.YELLOW}Not writing empty library to file.')
     elif interact.ask(f"Save library to {args.out}?"):
         write_bib(library, args.out)
+        if args.clean:
+            parser = util.unicodeTolatex()
+            parser.parsefile_inplace(args.out)
 
 
 def write_bib(library: bibtexparser.library, db: str):
