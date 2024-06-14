@@ -1,5 +1,6 @@
 import sys
 import argparse
+import argcomplete
 
 OUTPUTCMDS = ('bibtexdb', 'html', 'clipboard', 'textfile')
 
@@ -108,7 +109,7 @@ subparser_textfile.add_argument('--trim', nargs=2, default=['[',']'],
 subparser_textfile.add_argument('--citecmd', type=str, default='autocite',
                                 help='Citekey to use when replacing DOIs.')
 
-
+argcomplete.autocomplete(parser)
 opts = parser.parse_args()
 if opts.outputmode == 'bibtexdb':
     if opts.clean:
