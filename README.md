@@ -22,8 +22,9 @@ cd /path/to/doi2bibtex
 /usr/bin/env python3 -m pip install --upgrade ./
 ```
 To enable tab completion via [argcomplete](https://github.com/kislyuk/argcomplete):
+`activate-global-python-argcomplete` (you might need to use sudo)
+Then add this line to `.bashrc` or `.zshrc`:
 ```
-activate-global-python-argcomplete
 eval "$(register-python-argcomplete doi2bibtex)"
 ```
 
