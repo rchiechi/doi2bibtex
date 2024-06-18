@@ -21,10 +21,15 @@ I wrote this for myself, to make it easier to compile bibliographic databases wi
 cd /path/to/doi2bibtex
 /usr/bin/env python3 -m pip install --upgrade ./
 ```
-To enable tab completion via [argcomplete](https://github.com/kislyuk/argcomplete):
-`activate-global-python-argcomplete` (you might need to use sudo)
+To enable tab completion via [argcomplete](https://github.com/kislyuk/argcomplete): (you might need to use sudo)
+```
+activate-global-python-argcomplete
+``` 
+
 Then add this line to `.bashrc` or `.zshrc`:
-`eval "$(register-python-argcomplete doi2bibtex)"`
+```
+eval "$(register-python-argcomplete doi2bibtex)"
+```
 
 #### Usage:
 ```
