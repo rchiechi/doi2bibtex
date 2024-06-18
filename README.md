@@ -24,9 +24,7 @@ cd /path/to/doi2bibtex
 To enable tab completion via [argcomplete](https://github.com/kislyuk/argcomplete):
 `activate-global-python-argcomplete` (you might need to use sudo)
 Then add this line to `.bashrc` or `.zshrc`:
-```
-eval "$(register-python-argcomplete doi2bibtex)"
-```
+`eval "$(register-python-argcomplete doi2bibtex)"`
 
 #### Usage:
 ```
