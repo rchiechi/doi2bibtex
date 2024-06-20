@@ -75,7 +75,10 @@ def get_citing(dois):
         works += get_work_by(id, select='doi', cites=True)
     for work in works:
         for result in work.get('results', {'doi':''}):
-            _doi = result['doi'].replace('https://doi.org/', '')
+            if result['doi'] is not None:
+                _doi = result['doi'].replace('https://doi.org/', '')
+            else:
+                _doi = ''
             if _doi:
                 _dois.append(_doi)
     return dois + _dois

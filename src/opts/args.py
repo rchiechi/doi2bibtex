@@ -60,7 +60,7 @@ subparser_bibtexdb.add_argument('--dedupe', action='store_true', default=False,
                                 help='Dedupe the bibtex library.')
 
 # # #  HTML subparser options # # #
-subparser_html = subparsers.add_parser('html', help='Write output to HTML.')
+subparser_html = subparsers.add_parser('html', help='Write output to HTML bibliography.')
 
 subparser_html.add_argument('more_dois', type=str, nargs='*', default=[],
                             help='Additional DOIs supplied on the command line.')
@@ -74,7 +74,7 @@ subparser_html.add_argument('-b', '--boldname', type=str, default='',
                             help='Bold this name in HTML output.')
 
 # # #  Text list subparser options # # #
-subparser_textlist = subparsers.add_parser('textlist', help='Write output to HTML.')
+subparser_textlist = subparsers.add_parser('textlist', help='Write output to plain text bibliography.')
 
 subparser_textlist.add_argument('more_dois', type=str, nargs='*', default=[],
                                 help='Additional DOIs supplied on the command line.')
