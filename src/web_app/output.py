@@ -8,8 +8,12 @@ layers = [
     m.LatexEncodingMiddleware(True)
 ]
 
-def list_dois(library):
+def list_dois(library, **kwargs):
     bibtex_format = bibtexparser.BibtexFormat()
     bibtex_format.indent = '    '
     bibtex_format.block_separator = '\n\n'
-    return bibtexparser.write_string(library, bibtex_format=bibtex_format)
+    bibtex = bibtexparser.write_string(library, bibtex_format=bibtex_format)
+    if not kwargs.get('noclean', False):
+        cleaner = unicodeTolatex()
+        bibtex = cleaner.parsestring(bibtex)
+    return bibtex
