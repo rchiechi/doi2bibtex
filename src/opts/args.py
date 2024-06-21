@@ -112,7 +112,7 @@ subparser_textfile.add_argument('--citecmd', type=str, default='autocite',
 # # #  Webserver subparser options # # #
 subparser_webserver = subparsers.add_parser('webserver', help='Run doi2bibtex as a standalone web server.')
 subparser_webserver.add_argument('more_dois', type=str, nargs='*', default=[],
-                                 help='Additional DOIs supplied on the command line.')
+                                 help='Additional DOIs supplied on the command line (does nothing in webserver mode).')
 subparser_webserver.add_argument('--port', type=int, default=8080,
                                  help="Port to run server on.")
 subparser_webserver.add_argument('--addr', type=str, default='127.0.0.1',

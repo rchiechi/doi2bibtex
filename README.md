@@ -146,7 +146,7 @@ options:
 usage: doi2bibtex webserver [-h] [--port PORT] [--addr ADDR] [more_dois ...]
 
 positional arguments:
-  more_dois    Additional DOIs supplied on the command line.
+  more_dois    Additional DOIs supplied on the command line (does nothing in webserver mode).
 
 options:
   -h, --help   show this help message and exit
