@@ -33,7 +33,7 @@ eval "$(register-python-argcomplete doi2bibtex)"
 
 #### Usage:
 ```
-usage: doi2bibtex [-h] [--dois dois-to-parse] [--doifile find-dois-in-file] [--bibtexdb BIBTEXDB] [--loglevel {info,warning,error,debug}] [--refresh] [--database DATABASE] [--custom CUSTOM] [--cited] [--citing] {bibtexdb,html,textlist,clipboard,textfile} ...
+usage: doi2bibtex [-h] [--dois dois-to-parse] [--doifile find-dois-in-file] [--bibtexdb BIBTEXDB] [--loglevel {info,warning,error,debug}] [--refresh] [--database DATABASE] [--custom CUSTOM] [--cited] [--citing] {bibtexdb,html,textlist,clipboard,textfile,webserver} ...
 
 A python script for interacting with DOIs and bibtex.
 
@@ -54,13 +54,14 @@ options:
 subcommands:
   Options specific to the selected output mode.
 
-  {bibtexdb,html,textlist,clipboard,textfile}
+  {bibtexdb,html,textlist,clipboard,textfile,webserver}
                         sub-command help
     bibtexdb            Write output to a bibtex databse
-    html                Write output to HTML.
-    textlist            Write output to HTML.
+    html                Write output to HTML bibliography.
+    textlist            Write output to plain text bibliography.
     clipboard           Copy output to clipboard.
     textfile            Write output to a standard text file.
+    webserver           Run doi2bibtex as a standalone web server.
 
 Invoke a subcommand with -h to see options specific to that command.
 ```
@@ -140,7 +141,18 @@ options:
   --trim TRIM TRIM      Trim these two characters surrounding DOIs on replace e.g., square braces from [DOI].
   --citecmd CITECMD     Citekey to use when replacing DOIs.
 ```
+**webserver**
+```
+usage: doi2bibtex webserver [-h] [--port PORT] [--addr ADDR] [more_dois ...]
 
+positional arguments:
+  more_dois    Additional DOIs supplied on the command line.
+
+options:
+  -h, --help   show this help message and exit
+  --port PORT  Port to run server on.
+  --addr ADDR  Address to bind.
+```
 
 You can also feed it more DOIs on the command line after the subcommand.
 
