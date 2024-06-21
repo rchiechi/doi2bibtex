@@ -109,8 +109,22 @@ subparser_textfile.add_argument('--trim', nargs=2, default=['[',']'],
 subparser_textfile.add_argument('--citecmd', type=str, default='autocite',
                                 help='Citekey to use when replacing DOIs.')
 
+# # #  Webserver subparser options # # #
+subparser_webserver = subparsers.add_parser('webserver', help='Run doi2bibtex as a standalone web server.')
+subparser_webserver.add_argument('more_dois', type=str, nargs='*', default=[],
+                                 help='Additional DOIs supplied on the command line.')
+subparser_webserver.add_argument('--port', type=int, default=8080,
+                                 help="Port to run server on.")
+subparser_webserver.add_argument('--addr', type=str, default='127.0.0.1',
+                                 help="Address to bind.")
+
+
 argcomplete.autocomplete(parser)
 opts = parser.parse_args()
+
+if opts.outputmode == 'webserver' and opts.loglevel == 'warning':
+    opts.loglevel = 'info'
+
 if opts.outputmode == 'bibtexdb':
     if opts.clean:
         opts.dedue = True

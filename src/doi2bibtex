@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import sys
 import opts
 import util
 import bibtex
 import output
+import web_app
 from colorama import init, Fore, Style
 
 # Setup colors
@@ -14,6 +16,11 @@ args = opts.getopts()
 logger = util.getlogger('doi2bib', root=True, loglevel=args.loglevel)
 
 logger.debug("Debug logging enabled.")
+
+if args.outputmode == 'webserver':
+    logger.info(f"Starting server on {args.addr}:{args.port}")
+    web_app.web_server(args.addr, args.port)
+    sys.exit()
 
 if args.bibtexdb:
     library = bibtex.read(args.bibtexdb)
