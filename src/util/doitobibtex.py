@@ -34,7 +34,7 @@ def add_pages(bibtex, doi):
     m = re.match(PAGERE, doi)
     try:
         page = m.group(1)
-    except IndexError:
+    except (AttributeError, IndexError):
         return bibtex
     _biblist = bibtex.split(',')
     _biblist.insert(-1, f'pages={page}')
