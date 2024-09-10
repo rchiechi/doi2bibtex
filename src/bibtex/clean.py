@@ -1,9 +1,34 @@
+import bibtexparser
 import Levenshtein
 from titlecase import titlecase
 from colorama import Fore,Style
-from util import getlogger, getISO4
+from util import getlogger, getISO4, doitobibtex
 
 logger = getlogger(__name__)
+
+def get_pages(doi):
+    page = ''
+    if doi is None:
+        return page
+    _lib = bibtexparser.parse_string(doitobibtex(doi.value))
+    for entry in _lib.entries:
+        if 'pages' in entry.fields_dict:
+            page = entry.fields_dict['pages'].value
+    if not page:
+        logger.warning(f'Failed to guess pages for {doi.value}')
+    return page
+
+    # logger.warning("Guessing page from DOI:%s", doi.value)
+    # for _pagere in PAGERES:
+    #     m = re.match(_pagere, doi.value)
+    #     try:
+    #         page = m.group(1)
+    #         break
+    #     except (AttributeError, IndexError):
+    #         continue
+    # if not page:
+    #     logger.warning("Failed to guess page from DOI:%s", doi.value)
+    # return page
 
 class EntryCleaner:
 
@@ -102,15 +127,30 @@ class EntryCleaner:
                   Fore.WHITE, Fore.CYAN, fuzzy,Style.RESET_ALL))
             self.stats['n_abbreviated'] += 1
             entry.fields_dict['journal'].value = fuzzy
-        entry.fields_dict['journal'].value = self._page_double_hyphen(entry.fields_dict['journal'].value)
+        _pages = ''
+        if 'pages' not in entry.fields_dict:
+            _pages = get_pages(entry.fields_dict.get('doi', None))
+        if _pages:
+            try:
+                logger.info(f'Inserting field pages = {_pages}')
+                entry['pages'] = _pages
+            except TypeError:
+                logger.warning('You need to update biblatex parser (pip install --upgrade biblatexparser --pre)')
+        if 'pages' in entry.fields_dict:
+            entry.fields_dict['pages'].value = self._page_double_hyphen(entry.fields_dict.get('pages', None))
         self.stats['n_parsed'] += 1
         return entry
 
-    def _page_double_hyphen(self, page):
+    def _page_double_hyphen(self, pages):
+        if pages is None:
+            return ''
+        page = pages.value
         if len(page.split('-')) in (1,3):
             return page
         elif len(page.split('-')) >= 2:
             return(f"{page.split('-')[0]}--{page.split('-')[-1]}")
+        elif r'{\textendash}' in page:
+            return(page.replace(r'{\textendash}', '--'))
         return page
 
     def _fuzzymatch(self, journal):

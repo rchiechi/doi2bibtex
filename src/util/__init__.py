@@ -1,5 +1,5 @@
 import urllib.parse
-from .doitobibtex import get_bibtex_from_url
+from .doitobibtex import get_bibtex_from_url, PAGERES
 from .getlogger import return_logger
 from .doifinder import find_doi
 from .cache import loadcache, writetodisk
