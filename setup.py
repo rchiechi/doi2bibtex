@@ -6,7 +6,7 @@ with open("README.md") as fh:
     long_description = fh.read()
 
 setuptools.setup(name='doi2bibtex',
-                 version='0.1',
+                 version='0.2',
                  description='Convert dois to bibtex and save to library.',
                  classifiers=['Development Status :: Beta',
                               'Intended Audience :: Science/Research',
@@ -22,7 +22,7 @@ setuptools.setup(name='doi2bibtex',
                  author='Ryan C. Chiechi',
                  author_email='ryan.chiechi@ncsu.edu',
                  license='MIT',
-                 install_requires=['bibtexparser>=2.0.0b4',
+                 install_requires=['bibtexparser>=2.0.0b7',
                                    'colorama>=0.4.6',
                                    'python-Levenshtein>=0.23.0',
                                    'titlecase>=2.4.1',
