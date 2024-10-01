@@ -39,9 +39,14 @@ if args.citing:
     dois = bibtex.get_citing(dois)
 
 added = 0
+dois_in_library = bibtex.listKeyinLibrary(library, 'doi')
 for doi in dois:
     print('.', end='')
     if not doi:
+        print('x', end='')
+        continue
+    if doi.lower() in dois_in_library:
+        print('!')
         continue
     result = util.doitobibtex(doi)
     if result:

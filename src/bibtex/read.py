@@ -21,3 +21,15 @@ def load_bib(bibtex, dedupe=False):
     if dedupe:
         return dedupe_bib_library(library)
     return library
+
+def getkeys(library, key, lower=True):
+    keys = []
+    for entry in library.entries:
+        for _field in entry.fields_dict:
+            if _field.lower() == key.lower():
+                if lower:
+                    _val = str(entry.fields_dict[_field].value).lower()
+                else:
+                    _val = str(entry.fields_dict[_field].value)
+                keys.append(_val)
+    return keys

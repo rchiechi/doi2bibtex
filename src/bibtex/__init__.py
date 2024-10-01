@@ -1,4 +1,4 @@
-from .read import load_bib
+from .read import load_bib, getkeys
 from .dedupe import dedupe_bib_library
 from .clean import EntryCleaner
 from .replace import replace_doi_in_file
@@ -18,3 +18,6 @@ def replacedois(fn, library, citecmd, trim):
 
 def openalex(doi):
     return get_work_by(doi, doi=True)
+
+def listKeyinLibrary(library, key):
+    return getkeys(library, key)
