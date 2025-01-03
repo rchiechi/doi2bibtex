@@ -1,6 +1,6 @@
+# PYTHON_ARGCOMPLETE_OK
+import argcomplete, argparse
 import sys
-import argparse
-import argcomplete
 
 OUTPUTCMDS = ('bibtexdb', 'html', 'clipboard', 'textfile')
 
