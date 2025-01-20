@@ -33,3 +33,12 @@ def getkeys(library, key, lower=True):
                     _val = str(entry.fields_dict[_field].value)
                 keys.append(_val)
     return keys
+
+def getcitekeys(library, lower=False):
+    keys = []
+    for entry in library.entries:
+        if lower:
+            keys.append(entry.key.lower())
+        else:
+            keys.append(entry.key)
+    return keys

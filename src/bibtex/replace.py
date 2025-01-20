@@ -2,7 +2,7 @@
 import re
 import mmap
 from util import getlogger
-
+# from util import find_doi_in_bytearray
 
 logger = getlogger(__name__)
 

@@ -13,7 +13,7 @@ layers = [
     m.LatexEncodingMiddleware(True)
 ]
 
-def do_bibtexdb(library, args):
+def do_bibtexdb(library: bibtexparser.library, args):
     journals = util.loadabbreviations(args.database,
                                       custom=args.custom,
                                       refresh=args.refresh)
