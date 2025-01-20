@@ -61,7 +61,6 @@ for doi in set(dois):
         citekeys_in_library.append(_entry.key.lower())
         logger.debug(f"Added {_entry.key} = {doi} to library")
         added += 1
-print(bibtex.listCitekeys(library))
 print('')
 if added:
     print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
