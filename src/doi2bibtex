@@ -56,10 +56,10 @@ for doi in set(dois):
         if _entry.key.lower() in citekeys_in_library:
             _entry.key = f"{_entry.key}_{incr}"
             incr += 1
-            print(f"Duplicate key replaced with {_entry.key}")
+            print(f"|Duplicate key replaced with {_entry.key}|", end='')
         library.add(_entry)
         citekeys_in_library.append(_entry.key.lower())
-        logger.debug(f"Added {_entry.key} = {doi} to library")
+        print(f"|{_entry.key} = {doi}|", end='')
         added += 1
 print('')
 if added:
