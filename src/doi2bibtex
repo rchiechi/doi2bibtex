@@ -40,16 +40,16 @@ if args.citing:
 
 added = 0
 dois_in_library = bibtex.listKeyinLibrary(library, 'doi')
-citekeys_in_library = bibtex.listCitekeys(library)
+citekeys_in_library = bibtex.listCitekeys(library, lower=True)
 incr = 1
 for doi in set(dois):
-    print('.', end='')
     if not doi:
         print('x', end='')
         continue
     if doi.lower() in dois_in_library:
-        print('!')
+        print('!', end='')
         continue
+    print('.', end='')
     result = util.doitobibtex(doi)
     if result:
         _entry = bibtex.read(result).entries[0]
@@ -58,9 +58,11 @@ for doi in set(dois):
             incr += 1
             print(f"Duplicate key replaced with {_entry.key}")
         library.add(_entry)
-        citekeys_in_library.append(_entry.key)
-        logger.debug(f"Added {doi} to library")
+        citekeys_in_library.append(_entry.key.lower())
+        logger.debug(f"Added {_entry.key} = {doi} to library")
         added += 1
+print(bibtex.listCitekeys(library))
+sys.exit()
 print('')
 if added:
     print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
