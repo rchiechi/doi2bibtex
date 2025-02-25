@@ -2,7 +2,7 @@ import os
 import bibtexparser
 import bibtexparser.middlewares as m
 # from .month import MonthIntStrMiddleware
-from util import getlogger
+from doi2bibtex.util import getlogger
 from .dedupe import dedupe_bib_library
 
 logger = getlogger(__name__)

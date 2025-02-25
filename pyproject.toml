@@ -1,0 +1,33 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]  # Or "hatchling" for Hatch
+build-backend = "poetry.core.masonry.api" # Or "hatchling.build" for Hatch
+
+[tool.poetry] # For Poetry; use [tool.hatch] for Hatch
+name = "doi2bibtex"
+version = "0.1.0"
+description = "Convert dois to bibtex and save to library."
+authors = ["Ryan Chiechi <ryan@rcclab.com>"]
+license = "MIT" # Choose a license
+readme = "README.md" # or "README.rst"
+packages = [{include = "doi2bibtex"}] # Important: Specify your package directory
+
+[tool.poetry.dependencies]
+python = ">=3.12" # Specify Python versions
+bibtexparser = '>=2.0.0b7'
+colorama = '>=0.4.6'
+python-Levenshtein = '>=0.23.0'
+titlecase = '>=2.4.1'
+pyperclip = '>=1.8.2'
+pylatexenc = '>=2.10'
+iso4 = '>=0.0.2'
+argcomplete = '>=3.3.0'
+flask = '>=3.0.3'
+waitress = '>=3.0.0'
+
+[tool.poetry.dev-dependencies] # Development dependencies
+pytest = "^7.0"
+
+[tool.poetry.scripts] # Optional: For command-line scripts
+doi2bibtex = "doi2bibtex.doi2bibtex:main"
+
+# For Hatch, equivalents exist under [tool.hatch]

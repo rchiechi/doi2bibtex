@@ -1,11 +1,10 @@
 import re
-import util
-import bibtex
+import doi2bibtex.util as util
+import doi2bibtex.bibtex as bibtex
 from .filewriter import backupandwrite
 from datetime import datetime as dt
 from bibtexparser.model import Entry, Field
 from colorama import Fore, Style
-# import latexcodec
 from titlecase import titlecase
 
 REDOIURI = re.compile('https?://(dx\\.)?doi\\.org/')
@@ -18,14 +17,8 @@ def do_html(library, args):
     textf = {'bold': ('<b>','</b>'),
              'italics': ('<i>','</i>'),
              'heading': ('<h2','</h2>')}
-    # if args.nospan:
-    #     textf['bold'] = ('<b>','</b>')
-    #     textf['italics'] = ('<i>','</i>')
-    #     textf['heading'] = textf['bold']
-    #     textf['normal'] = (',')
-
     for entry in library.entries:
-        year, _formatted = _parse_entry(entry, textf, args)
+        year, _formatted = _parse_entry(entry, args, textf)
         if year is None:
             continue
         if year not in formatted['journals']:
@@ -33,14 +26,33 @@ def do_html(library, args):
         else:
             formatted['journals'][year].append(_formatted)
 
-    html = _HTMLblock(formatted, textf, args.nobreaks)
+    html = _HTMLblock(formatted, textf, args)
     if args.out is None:
         print(html)
     else:
         print(f"{Style.BRIGHT}Writing to {args.out}")
         backupandwrite(args.out, bytes(html, encoding='utf-8'))
 
-def _parse_entry(entry, textf, args):
+def do_textlist(library, args):
+    txt = ''
+    formatted = {'journals':{},'books':{},'patents':{}}
+    for entry in library.entries:
+        year, _formatted = _parse_entry(entry, args)
+        if year is None:
+            continue
+        if year not in formatted['journals']:
+            formatted['journals'][year] = [_formatted]
+        else:
+            formatted['journals'][year].append(_formatted)
+
+    txt = _TXTblock(formatted, args)
+    if args.out is None:
+        print(txt)
+    else:
+        print(f"{Style.BRIGHT}Writing to {args.out}")
+        backupandwrite(args.out, bytes(txt, encoding='utf-8'))
+
+def _parse_entry(entry, args,  textf=None):
     if entry.entry_type.lower() != 'article':
         print(f'{Fore.RED}Cannot parse {entry.key} ({entry.entry_type})')
         return None, None
@@ -63,15 +75,24 @@ def _parse_entry(entry, textf, args):
         year = dt.now().year
         print("Warning %s is non-numerical year, setting to %s." % (entry.fields_dict['year'].value, year))
 
-    clean_title = '<A href="%s" target="_blank">%s</A>' % (_href, titlecase(cleanLatex(entry.fields_dict['title'].value)))
-    clean_authors = parseAuthors(entry.fields_dict['author'].value, args.boldname, textf)
-    clean_journal = '%s%s%s' % (textf['italics'][0], cleanLatex(entry.fields_dict['journal'].value), textf['italics'][1])
-    clean_pages = cleanLatex(entry.fields_dict['pages'].value)
-    clean_volume = '%s%s%s' % (textf['italics'][0], cleanLatex(entry.fields_dict['volume'].value), textf['italics'][1])
-    clean_year = '%s%s%s' % (textf['bold'][0], cleanLatex(year), textf['bold'][1])
-    _formatted = '%s %s. %s %s, %s, %s' % (clean_authors,
-                                           clean_title, clean_journal,
-                                           clean_year, clean_volume, clean_pages)
+    if textf is not None:
+        clean_title = '<A href="%s" target="_blank">%s</A>' % (_href, titlecase(cleanLatex(entry.fields_dict['title'].value)))
+        clean_authors = parseAuthors(entry.fields_dict['author'].value, args.boldname, textf)
+        clean_journal = '%s%s%s' % (textf['italics'][0], cleanLatex(entry.fields_dict['journal'].value), textf['italics'][1])
+        clean_pages = cleanLatex(entry.fields_dict['pages'].value)
+        clean_volume = '%s%s%s' % (textf['italics'][0], cleanLatex(entry.fields_dict['volume'].value), textf['italics'][1])
+        clean_year = '%s%s%s' % (textf['bold'][0], cleanLatex(year), textf['bold'][1])
+        _formatted = '%s %s. %s %s, %s, %s' % (clean_authors,
+                                               clean_title, clean_journal,
+                                               clean_year, clean_volume, clean_pages)
+    else:
+        clean_title = titlecase(cleanLatex(entry.fields_dict['title'].value))
+        clean_authors = parseAuthors(entry.fields_dict['author'].value, args.boldname)
+        clean_journal = cleanLatex(entry.fields_dict['journal'].value)
+        clean_pages = cleanLatex(entry.fields_dict['pages'].value)
+        clean_volume = cleanLatex(entry.fields_dict['volume'].value)
+        clean_year = cleanLatex(year)
+        _formatted = f'{clean_authors} {clean_title}. {clean_journal} {clean_year}, {clean_volume}, {clean_pages}. DOI:{doi}'
     return year, _formatted
 
 def _finddoi(entry):
@@ -93,7 +114,7 @@ def _finddoi(entry):
                 break
     return doi or None
 
-def _HTMLblock(formatted, textf, nobreaks):
+def _HTMLblock(formatted, textf, args):
     html = []
     years = list(formatted['journals'].keys())
     years.sort(reverse=True)
@@ -107,9 +128,22 @@ def _HTMLblock(formatted, textf, nobreaks):
             html.append('</li>')
     # html.append('</ol>')
 
-    if nobreaks:
+    if args.nobreaks:
         return ''.join(html)
     return '\n'.join(html)
+
+def _TXTblock(formatted, args):
+    txt = []
+    years = list(formatted['journals'].keys())
+    years.sort(reverse=True)
+    i = 1
+    for _year in years:
+        if args.years:
+            txt.append(f'{_year}')
+        for _pub in formatted['journals'][_year]:
+            txt.append(f'{i:03}. {_pub}')
+            i += 1
+    return '\n'.join(txt)
 
 def cleanLatex(latex):
     converter = util.latexAccentConverter()
@@ -125,14 +159,16 @@ def cleanLatex(latex):
         cleaned = _raw
     return str(cleaned).strip()
 
-def parseAuthors(authors, boldname, textf):
+def parseAuthors(authors, boldname, textf=None):
     _authorlist = []
     for _author in (authors.split('and')):
         _s = cleanLatex(_author)
         if ',' not in _s:
             _s = '%s, %s' % (_s.split(' ')[-1], ' '.join(_s.split(' ')[:-1]))
-        if boldname and (boldname in _s):
+        if boldname and (boldname.lower() in _s.lower()) and textf is not None:
             _s = '%s%s%s' % (textf['bold'][0], _s, textf['bold'][1])
+        elif boldname and (boldname.lower() in _s.lower()):
+            _s = f'*{_s}'
         _authorlist.append(_s)
     return '; '.join(_authorlist)
 

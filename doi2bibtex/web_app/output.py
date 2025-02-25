@@ -2,7 +2,7 @@ import sys
 import pyperclip
 import bibtexparser
 import bibtexparser.middlewares as m
-from util import unicodeTolatex
+from doi2bibtex.util import unicodeTolatex
 
 layers = [
     m.LatexEncodingMiddleware(True)

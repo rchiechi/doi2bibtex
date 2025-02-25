@@ -1,13 +1,12 @@
 from tempfile import TemporaryDirectory
 from flask import Flask, render_template, request, jsonify, send_from_directory, flash, url_for
 from werkzeug.utils import secure_filename
-from util import getlogger
-from web_app import output
-import bibtex
-import util
+from .output import list_dois
+import doi2bibtex.bibtex as bibtex
+import doi2bibtex.util as util
 
 
-logger = getlogger(__name__)
+logger = util.getlogger(__name__)
 
 UPLOAD_FOLDER = TemporaryDirectory()
 ALLOWED_EXTENSIONS = {'txt', 'bib', 'tex'}
@@ -43,7 +42,7 @@ def doi2bib():
     library = bibtex.read('')
     result = util.doitobibtex(doi)
     library.add(bibtex.read(result).entries)
-    tex = output.list_dois(library)
+    tex = list_dois(library)
     return render_template("success.html", HEAD='Bibtex Entry', MESSAGE=tex)
 
 @app.route("/upload")

@@ -1,7 +1,7 @@
 # import os
 import re
 import mmap
-from util import getlogger
+from doi2bibtex.util import getlogger
 
 
 logger = getlogger(__name__)

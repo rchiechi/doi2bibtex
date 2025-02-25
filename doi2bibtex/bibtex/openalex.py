@@ -2,7 +2,7 @@ import urllib.request
 from urllib.error import HTTPError
 import http
 import json
-from util.getlogger import return_logger
+from doi2bibtex.util.getlogger import return_logger
 
 BASE_URL = 'https://api.openalex.org/works'
 

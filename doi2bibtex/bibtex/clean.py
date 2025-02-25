@@ -2,7 +2,7 @@ import bibtexparser
 import Levenshtein
 from titlecase import titlecase
 from colorama import Fore,Style
-from util import getlogger, getISO4, doitobibtex
+from doi2bibtex.util import getlogger, getISO4, doitobibtex
 
 logger = getlogger(__name__)
 

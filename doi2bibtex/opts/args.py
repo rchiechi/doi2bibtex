@@ -1,4 +1,3 @@
-# PYTHON_ARGCOMPLETE_OK
 import argcomplete, argparse
 import sys
 

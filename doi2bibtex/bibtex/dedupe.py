@@ -1,5 +1,5 @@
 from colorama import Fore,Style,Back
-from util import getlogger
+from doi2bibtex.util import getlogger
 
 logger = getlogger(__name__)
 

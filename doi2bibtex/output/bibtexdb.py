@@ -3,9 +3,9 @@ import shutil
 import bibtexparser
 import bibtexparser.middlewares as m
 from colorama import Fore, Style
-import util
-import bibtex
-import interact
+import doi2bibtex.util as util
+import doi2bibtex.bibtex as bibtex
+import doi2bibtex.interact as interact
 
 logger = util.getlogger(__name__)
 

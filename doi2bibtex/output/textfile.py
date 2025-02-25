@@ -1,4 +1,4 @@
-import bibtex
+import doi2bibtex.bibtex as bibtex
 from .filewriter import backupandwrite
 from .bibtexdb import write_bib
 import bibtexparser
