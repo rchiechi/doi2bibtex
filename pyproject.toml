@@ -24,6 +24,7 @@ argcomplete = '>=3.3.0'
 flask = '>=3.0.3'
 waitress = '>=3.0.0'
 httpx = '>=0.28.1'
+asyncio-throttle = '>=1.0.2'
 
 [tool.poetry.dev-dependencies] # Development dependencies
 pytest = "^7.0"

@@ -38,9 +38,9 @@ async def async_main():
         logger.debug(dois)
     
     if args.cited:
-        dois = bibtex.get_cited(dois)
+        dois = await bibtex.async_get_cited(dois)
     if args.citing:
-        dois = bibtex.get_citing(dois)
+        dois = await bibtex.async_get_citing(dois)
     
     added = 0
     dois_in_library = bibtex.listKeyinLibrary(library, 'doi')
@@ -68,7 +68,7 @@ async def async_main():
     print('')
     if added:
         print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
-    
+
     getattr(output, args.outputmode)(library, args)
     
 def main():
