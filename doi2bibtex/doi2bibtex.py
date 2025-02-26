@@ -2,6 +2,7 @@
 # PYTHON_ARGCOMPLETE_OK
 
 import sys
+import asyncio
 import doi2bibtex.opts as opts
 import doi2bibtex.util as util
 import doi2bibtex.bibtex as bibtex
@@ -14,7 +15,7 @@ init(autoreset=True)
 
 
 
-def main():
+async def async_main():
     args = opts.getopts()
     
     logger = util.getlogger('doi2bib', root=True, loglevel=args.loglevel)
@@ -69,3 +70,9 @@ def main():
         print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
     
     getattr(output, args.outputmode)(library, args)
+    
+def main():
+    asyncio.run(async_main())
+    
+if __name__ == "__main__":
+    main()
