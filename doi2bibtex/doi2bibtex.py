@@ -12,14 +12,14 @@ from colorama import init, Fore, Style
 # Setup colors
 init(autoreset=True)
 
-args = opts.getopts()
 
-logger = util.getlogger('doi2bib', root=True, loglevel=args.loglevel)
-
-logger.debug("Debug logging enabled.")
 
 def main():
-
+    args = opts.getopts()
+    
+    logger = util.getlogger('doi2bib', root=True, loglevel=args.loglevel)
+    
+    logger.debug("Debug logging enabled.")
     if args.outputmode == 'webserver':
         logger.info(f"Starting server on {args.addr}:{args.port}")
         web_app.web_server(args.addr, args.port)
@@ -43,24 +43,29 @@ def main():
     
     added = 0
     dois_in_library = bibtex.listKeyinLibrary(library, 'doi')
-    for doi in dois:
-        print('.', end='')
+    citekeys_in_library = bibtex.listCitekeys(library, lower=True)
+    incr = 1
+    for doi in set(dois):
         if not doi:
             print('x', end='')
             continue
         if doi.lower() in dois_in_library:
-            print('!')
+            print('!', end='')
             continue
+        print('.', end='')
         result = util.doitobibtex(doi)
         if result:
-            library.add(bibtex.read(result).entries)
-            logger.debug(f"Added {doi} to library")
+            _entry = bibtex.read(result).entries[0]
+            if _entry.key.lower() in citekeys_in_library:
+                _entry.key = f"{_entry.key}_{incr}"
+                incr += 1
+                print(f"|Duplicate key replaced with {_entry.key}|", end='')
+            library.add(_entry)
+            citekeys_in_library.append(_entry.key.lower())
+            print(f"|{_entry.key} = {doi}|", end='')
             added += 1
     print('')
     if added:
         print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
     
     getattr(output, args.outputmode)(library, args)
-
-if __name__ == '__main__':
-    main()

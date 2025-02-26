@@ -12,7 +12,7 @@ bibtex_format.block_separator = '\n\n'
 def do_textfile(library, args):
     if args.replace:
         _file = bibtex.replacedois(args.doifile, library, args.citecmd, args.trim)
-        write_bib(library, args.replace)
+        write_bib(library, args.bibtexdb)
     else:
         _file = bytes(bibtexparser.write_string(library, bibtex_format=bibtex_format), encoding='utf-8')
     if not _file:
