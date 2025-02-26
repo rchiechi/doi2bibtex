@@ -8,34 +8,37 @@ from urllib.parse import urlencode
 import httpx
 from asyncio_throttle import Throttler
 from doi2bibtex.util.getlogger import return_logger
+from colorama import Fore, Style
 
 BASE_URL = 'https://api.openalex.org/works'
 
 logger = return_logger(__name__)
 
-def get_work_by(id, **kwargs):
-    if isinstance(id, bytes):
-        id = str(id, encoding='utf-8')
-    if kwargs.get('doi', False):
-        id = f'doi:{id}'
-    _q = '?'
-    if kwargs.get('cites', False):
-        url = f'{BASE_URL}{_q}filter=cites:{id}&per-page=200'
-        _q = '&'
-    else:
-        url = f'{BASE_URL}/{id}'
-    if kwargs.get('select', None) is not None:
-        url = f'{url}{_q}select={kwargs["select"]}'
-        _q = '&'
-    if kwargs.get('page', 0) > 0:
-        url = f'{url}{_q}page={kwargs["page"]}'
-        _q = '&'
-    works = [_geturl(f'{url}{_q}cursor=*')]
-    while works[-1].get('meta', {'next_cursor': None})['next_cursor'] is not None:
-        _next = works[-1]["meta"]["next_cursor"]
-        logger.debug(f'Getting next cursor {_next}')
-        works.append(_geturl(f'{url}{_q}cursor={_next}'))
-    return works
+throttler = Throttler(rate_limit=10, period=1)  # 10 requests per second (OpenAlex limit)
+
+# def get_work_by(id, **kwargs):
+#     if isinstance(id, bytes):
+#         id = str(id, encoding='utf-8')
+#     if kwargs.get('doi', False):
+#         id = f'doi:{id}'
+#     _q = '?'
+#     if kwargs.get('cites', False):
+#         url = f'{BASE_URL}{_q}filter=cites:{id}&per-page=200'
+#         _q = '&'
+#     else:
+#         url = f'{BASE_URL}/{id}'
+#     if kwargs.get('select', None) is not None:
+#         url = f'{url}{_q}select={kwargs["select"]}'
+#         _q = '&'
+#     if kwargs.get('page', 0) > 0:
+#         url = f'{url}{_q}page={kwargs["page"]}'
+#         _q = '&'
+#     works = [_geturl(f'{url}{_q}cursor=*')]
+#     while works[-1].get('meta', {'next_cursor': None})['next_cursor'] is not None:
+#         _next = works[-1]["meta"]["next_cursor"]
+#         logger.debug(f'Getting next cursor {_next}')
+#         works.append(_geturl(f'{url}{_q}cursor={_next}'))
+#     return works
 
 async def async_get_work_by(id, **kwargs):
     if isinstance(id, bytes):
@@ -74,29 +77,29 @@ async def async_get_work_by(id, **kwargs):
 
     return works
 
-def _geturl(url):
-    work = {}
-    logger.debug(f"Fetching {url}")
-    req = urllib.request.Request(url)
-    try:
-        with urllib.request.urlopen(req) as f:
-            print('.', end='')
-            work = json.load(f)
-    except HTTPError as err:
-        if err.code == 404:
-            logger.error(f"Could not resolve {id} with openalex: {url}")
-        else:
-            logger.error(f"Error {err.code} while fetching {url}")
-    except http.client.InvalidURL:
-        logger.error(f"'{url}' is not a valid url")
-    return work
+# def _geturl(url):
+#     work = {}
+#     logger.debug(f"Fetching {url}")
+#     req = urllib.request.Request(url)
+#     try:
+#         with urllib.request.urlopen(req) as f:
+#             print('.', end='')
+#             work = json.load(f)
+#     except HTTPError as err:
+#         if err.code == 404:
+#             logger.error(f"Could not resolve {id} with openalex: {url}")
+#         else:
+#             logger.error(f"Error {err.code} while fetching {url}")
+#     except http.client.InvalidURL:
+#         logger.error(f"'{url}' is not a valid url")
+#     return work
 
 async def _async_get_url(client, url):
     logger.debug(f"Fetching {url}")
     try:
         response = await client.get(url, follow_redirects=True)
         response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
-        print('.', end='')
+        print(f'{Style.BRIGHT}.', end=Style.RESET_ALL)
         return response.json()
     except httpx.HTTPStatusError as err:
         if err.response.status_code == 404:
@@ -111,25 +114,24 @@ async def _async_get_url(client, url):
         logger.error(f"'{url}' is not a valid url")
         return {}
 
-def get_cited(dois):
-    _dois = []
-    for doi in dois:
-        if not doi:
-            continue
-        works = get_work_by(doi, select='referenced_works', doi=True)
-        for work in works:
-            ids = work.get('referenced_works', [])
-            for id in ids:
-                _doi = get_work_by(id.replace('https://openalex.org/', ''), select='doi')[0].get('doi', 'https://doi.org/')
-                if _doi is not None:
-                    _doi = _doi.replace('https://doi.org/', '')
-                if _doi:
-                    _dois.append(_doi)
-    return dois + _dois
+# def get_cited(dois):
+#     _dois = []
+#     for doi in dois:
+#         if not doi:
+#             continue
+#         works = get_work_by(doi, select='referenced_works', doi=True)
+#         for work in works:
+#             ids = work.get('referenced_works', [])
+#             for id in ids:
+#                 _doi = get_work_by(id.replace('https://openalex.org/', ''), select='doi')[0].get('doi', 'https://doi.org/')
+#                 if _doi is not None:
+#                     _doi = _doi.replace('https://doi.org/', '')
+#                 if _doi:
+#                     _dois.append(_doi)
+#     return dois + _dois
 
 async def async_get_cited(dois: List[str]) -> List[str]:
     _dois = []
-    throttler = Throttler(rate_limit=10, period=1)  # 10 requests per second (OpenAlex limit)
 
     async def process_doi(doi):
         if not doi:
@@ -170,24 +172,24 @@ async def async_get_cited(dois: List[str]) -> List[str]:
 #                     _dois.append(_doi)
 #     return dois + _dois
 
-def get_citing(dois):
-    works = []
-    _dois = []
-    for doi in dois:
-        if not doi:
-            continue
-        _id = get_work_by(doi, select='id', doi=True)
-        id = _id[0].get('id', '').replace('https://openalex.org/', '')
-        works += get_work_by(id, select='doi', cites=True)
-    for work in works:
-        for result in work.get('results', {'doi':''}):
-            if result['doi'] is not None:
-                _doi = result['doi'].replace('https://doi.org/', '')
-            else:
-                _doi = ''
-            if _doi:
-                _dois.append(_doi)
-    return dois + _dois
+# def get_citing(dois):
+#     works = []
+#     _dois = []
+#     for doi in dois:
+#         if not doi:
+#             continue
+#         _id = get_work_by(doi, select='id', doi=True)
+#         id = _id[0].get('id', '').replace('https://openalex.org/', '')
+#         works += get_work_by(id, select='doi', cites=True)
+#     for work in works:
+#         for result in work.get('results', {'doi':''}):
+#             if result['doi'] is not None:
+#                 _doi = result['doi'].replace('https://doi.org/', '')
+#             else:
+#                 _doi = ''
+#             if _doi:
+#                 _dois.append(_doi)
+#     return dois + _dois
 
 async def async_get_citing(dois: List[str]) -> List[str]:
     works = []
