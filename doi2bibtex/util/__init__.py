@@ -1,7 +1,7 @@
 import urllib.parse
 from .doitobibtex import get_bibtex_from_url, PAGERES
 from .getlogger import return_logger
-from .doifinder import find_doi
+from .doifinder import find_doi, find_doi_in_bytearray
 from .cache import loadcache, writetodisk
 from .abbreviso import local_iso4
 from .LaTexAccents import AccentConverter
