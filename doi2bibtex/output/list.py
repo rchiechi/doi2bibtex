@@ -16,7 +16,8 @@ def do_html(library, args):
     formatted = {'journals':{},'books':{},'patents':{}}
     textf = {'bold': ('<b>','</b>'),
              'italics': ('<i>','</i>'),
-             'heading': ('<h2','</h2>')}
+             'heading': ('<h2','</h2>'),
+             'href': ('<A href=',' target="_blank">','</A>', '')}
     for entry in library.entries:
         year, _formatted = _parse_entry(entry, args, textf)
         if year is None:
@@ -32,6 +33,30 @@ def do_html(library, args):
     else:
         print(f"{Style.BRIGHT}Writing to {args.out}")
         backupandwrite(args.out, bytes(html, encoding='utf-8'))
+
+def do_markdown(library, args):
+    txt = ''
+    formatted = {'journals':{},'books':{},'patents':{}}
+    textf = {'bold': ('**','**'),
+             'italics': ('*','*'),
+             'heading': ('##',''),
+             'href': ('[',']','(', ')')}
+    
+    for entry in library.entries:
+        year, _formatted = _parse_entry(entry, args, textf)
+        if year is None:
+            continue
+        if year not in formatted['journals']:
+            formatted['journals'][year] = [_formatted]
+        else:
+            formatted['journals'][year].append(_formatted)
+    
+    txt = _Markdownblock(formatted, textf, args)
+    if args.out is None:
+        print(txt)
+    else:
+        print(f"{Style.BRIGHT}Writing to {args.out}")
+        backupandwrite(args.out, bytes(txt, encoding='utf-8'))
 
 def do_textlist(library, args):
     txt = ''
@@ -52,7 +77,7 @@ def do_textlist(library, args):
         print(f"{Style.BRIGHT}Writing to {args.out}")
         backupandwrite(args.out, bytes(txt, encoding='utf-8'))
 
-def _parse_entry(entry, args,  textf=None):
+def _parse_entry(entry, args, textf=None):
     if entry.entry_type.lower() != 'article':
         print(f'{Fore.RED}Cannot parse {entry.key} ({entry.entry_type})')
         return None, None
@@ -76,7 +101,20 @@ def _parse_entry(entry, args,  textf=None):
         print("Warning %s is non-numerical year, setting to %s." % (entry.fields_dict['year'].value, year))
 
     if textf is not None:
-        clean_title = '<A href="%s" target="_blank">%s</A>' % (_href, titlecase(cleanLatex(entry.fields_dict['title'].value)))
+        # clean_title = '<A href="%s" target="_blank">%s</A>' % (_href, titlecase(cleanLatex(entry.fields_dict['title'].value)))
+        if textf['href'][3]:
+            clean_title = '%s%s%s%s%s%s' % (textf['href'][0],
+                                            titlecase(cleanLatex(entry.fields_dict['title'].value)),
+                                            textf['href'][1],
+                                            textf['href'][2],
+                                            _href,
+                                            textf['href'][3])
+        else:
+            clean_title = '%s"%s"%s%s%s' % (textf['href'][0],
+                                            _href,
+                                            textf['href'][1],
+                                            titlecase(cleanLatex(entry.fields_dict['title'].value)),
+                                            textf['href'][2])
         clean_authors = parseAuthors(entry.fields_dict['author'].value, args.boldname, textf)
         clean_journal = '%s%s%s' % (textf['italics'][0], cleanLatex(entry.fields_dict['journal'].value), textf['italics'][1])
         clean_pages = cleanLatex(entry.fields_dict['pages'].value)
@@ -126,11 +164,20 @@ def _HTMLblock(formatted, textf, args):
             html.append('<li>')
             html.append('<p>%s</p>' % _pub)
             html.append('</li>')
-    # html.append('</ol>')
 
     if args.nobreaks:
         return ''.join(html)
     return '\n'.join(html)
+
+def _Markdownblock(formatted, textf, args):
+    txt = []
+    years = list(formatted['journals'].keys())
+    years.sort(reverse=True)
+    for _year in years:
+        txt.append('%s %s' % (textf['heading'][0], _year))
+        for _pub in formatted['journals'][_year]:
+            txt.append(f'- {_pub}')
+    return '\n'.join(txt)
 
 def _TXTblock(formatted, args):
     txt = []
