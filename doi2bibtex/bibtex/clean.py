@@ -22,14 +22,29 @@ def get_pages(doi):
 
 
 class EntryCleaner:
-
+    """Class for cleaning and standardizing BibTeX entries with interactive journal name handling."""
+    
+    REQUIRED_KEYS = ('title', 'journal')
+    REMOVE_KEYS = ('file', 'bdsk-file-1')  # File entries to remove from shared bibs
+    
+    def __init__(self, library, journals: Dict[str, str]):
+        """Initialize the cleaner with library and journals database.
+        
+        Args:
+            library: BibTeX library to clean
+            journals: Dictionary mapping full journal names to abbreviations
+        """
         self.library = library
         self.journals = journals
-        for entry in self.library.entries:
-            if self.stop:
-                break
-            self.library.replace(entry, self._clean_entry(entry))
-        return self.library
+        self.stop = False  # Flag for interrupting processing
+        self.errors: List[Entry] = []
+        self.history: Dict[str, Optional[str]] = {}  # Cache of user decisions
+        self.custom: Dict[str, str] = {}  # Custom abbreviations
+        self.stats = {
+            'n_cleaned': 0,
+            'n_parsed': 0,
+            'n_abbreviated': 0
+        }
 
     def _clean_entry(self, entry: Entry) -> Entry:
         """Clean a single entry, handling validation and cleaning steps."""
