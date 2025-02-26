@@ -11,7 +11,7 @@ REDOIURI = re.compile('https?://(dx\\.)?doi\\.org/')
 
 logger = util.getlogger(__name__)
 
-def do_html(library, args):
+async def do_html(library, args):
     html = ''
     formatted = {'journals':{},'books':{},'patents':{}}
     textf = {'bold': ('<b>','</b>'),
@@ -19,7 +19,7 @@ def do_html(library, args):
              'heading': ('<h2','</h2>'),
              'href': ('<A href=',' target="_blank">','</A>', '')}
     for entry in library.entries:
-        year, _formatted = _parse_entry(entry, args, textf)
+        year, _formatted = await _parse_entry(entry, args, textf)
         if year is None:
             continue
         if year not in formatted['journals']:
@@ -34,7 +34,7 @@ def do_html(library, args):
         print(f"{Style.BRIGHT}Writing to {args.out}")
         backupandwrite(args.out, bytes(html, encoding='utf-8'))
 
-def do_markdown(library, args):
+async def do_markdown(library, args):
     txt = ''
     formatted = {'journals':{},'books':{},'patents':{}}
     textf = {'bold': ('**','**'),
@@ -43,7 +43,7 @@ def do_markdown(library, args):
              'href': ('[',']','(', ')')}
     
     for entry in library.entries:
-        year, _formatted = _parse_entry(entry, args, textf)
+        year, _formatted = await _parse_entry(entry, args, textf)
         if year is None:
             continue
         if year not in formatted['journals']:
@@ -58,11 +58,11 @@ def do_markdown(library, args):
         print(f"{Style.BRIGHT}Writing to {args.out}")
         backupandwrite(args.out, bytes(txt, encoding='utf-8'))
 
-def do_textlist(library, args):
+async def do_textlist(library, args):
     txt = ''
     formatted = {'journals':{},'books':{},'patents':{}}
     for entry in library.entries:
-        year, _formatted = _parse_entry(entry, args)
+        year, _formatted = await _parse_entry(entry, args)
         if year is None:
             continue
         if year not in formatted['journals']:
@@ -77,7 +77,7 @@ def do_textlist(library, args):
         print(f"{Style.BRIGHT}Writing to {args.out}")
         backupandwrite(args.out, bytes(txt, encoding='utf-8'))
 
-def _parse_entry(entry, args, textf=None):
+async def _parse_entry(entry, args, textf=None):
     if entry.entry_type.lower() != 'article':
         print(f'{Fore.RED}Cannot parse {entry.key} ({entry.entry_type})')
         return None, None
@@ -92,7 +92,8 @@ def _parse_entry(entry, args, textf=None):
         try:
             entry.fields_dict[key].value
         except KeyError:
-            entry.set_field(resolvedoi(doi, key).fields_dict[key])
+            _field = await esolvedoi(doi, key)
+            entry.set_field(_field.fields_dict[key])
             print(f'{Style.BRIGHT}{Fore.BLUE}Added {key}: "{entry.fields_dict[key].value}" to {entry.key}')
     try:
         year = int(entry.fields_dict['year'].value)
@@ -219,10 +220,10 @@ def parseAuthors(authors, boldname, textf=None):
         _authorlist.append(_s)
     return '; '.join(_authorlist)
 
-def resolvedoi(doi, key='null'):
+async def resolvedoi(doi, key='null'):
     entry = Entry('article', str(doi), [Field(key, '')])
     if doi is not None:
-        result = util.doitobibtex(doi)
+        result = await util.async_get_bibtex_from_url(doi)
         if result:
             entry = bibtex.read(result).entries[0]
             print(f'{Style.BRIGHT}{Fore.GREEN}Got record from {doi}.')

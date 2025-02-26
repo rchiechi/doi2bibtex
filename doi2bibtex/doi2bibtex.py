@@ -54,7 +54,7 @@ async def async_main():
             print('!', end='')
             continue
         print('.', end='')
-        result = util.doitobibtex(doi)
+        result = await util.async_get_bibtex_from_url(doi)
         if result:
             _entry = bibtex.read(result).entries[0]
             if _entry.key.lower() in citekeys_in_library:
@@ -69,7 +69,7 @@ async def async_main():
     if added:
         print(f"{Fore.YELLOW}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
 
-    getattr(output, args.outputmode)(library, args)
+    await getattr(output, args.outputmode)(library, args)
     
 def main():
     asyncio.run(async_main())

@@ -1,18 +1,19 @@
 from typing import Dict, List, Tuple, Optional
+import Levenshtein
 import bibtexparser
 from bibtexparser.model import Entry, Field
 from colorama import Fore, Style
 from titlecase import titlecase
 from colorama import Fore,Style
-from doi2bibtex.util import getlogger, getISO4, doitobibtex
+from doi2bibtex.util import getlogger, getISO4, async_get_bibtex_from_url
 
 logger = getlogger(__name__)
 
-def get_pages(doi):
+async def get_pages(doi):
     page = ''
     if doi is None:
         return page
-    _lib = bibtexparser.parse_string(doitobibtex(doi.value))
+    _lib = bibtexparser.parse_string(await async_get_bibtex_from_url(doi.value))
     for entry in _lib.entries:
         if 'pages' in entry.fields_dict:
             page = entry.fields_dict['pages'].value
@@ -46,7 +47,15 @@ class EntryCleaner:
             'n_abbreviated': 0
         }
 
-    def _clean_entry(self, entry: Entry) -> Entry:
+    async def clean(self) -> Entry:
+        """Clean entire library, replacing entries with cleaned versions."""
+        for entry in self.library.entries:
+            if self.stop:
+                break
+            self.library.replace(entry, await self._clean_entry(entry))
+        return self.library
+
+    async def _clean_entry(self, entry: Entry) -> Entry:
         """Clean a single entry, handling validation and cleaning steps."""
         # Validate entry type and required fields
         if entry.entry_type.lower() != 'article':
@@ -83,9 +92,9 @@ class EntryCleaner:
             logger.debug("Entry already parsed, skipping user input.")
             return entry
 
-        return self._handle_journal_abbreviation(entry)
+        return await self._handle_journal_abbreviation(entry)
 
-    def _handle_journal_abbreviation(self, entry: Entry) -> Entry:
+    async def _handle_journal_abbreviation(self, entry: Entry) -> Entry:
         """Handle journal abbreviation with fuzzy matching and user input."""
         journal = entry.fields_dict['journal'].value
         fuzzy_match, score = self._fuzzy_match(journal)
@@ -118,7 +127,7 @@ class EntryCleaner:
             self._apply_abbreviation(entry, journal, fuzzy_match)
 
         # Handle pages
-        self._handle_pages(entry)
+        await self._handle_pages(entry)
         
         self.stats['n_parsed'] += 1
         return entry
@@ -170,12 +179,12 @@ class EntryCleaner:
         self.stats['n_abbreviated'] += 1
         entry.fields_dict['journal'].value = abbreviated
 
-    def _handle_pages(self, entry: Entry):
+    async def _handle_pages(self, entry: Entry):
         """Handle page number formatting and addition."""
         if 'pages' not in entry.fields_dict:
             doi = entry.fields_dict.get('doi', None)
             if doi:
-                pages = get_pages(doi)
+                pages = await get_pages(doi)
                 if pages:
                     logger.info(f'Inserting field pages = {pages}')
                     try:

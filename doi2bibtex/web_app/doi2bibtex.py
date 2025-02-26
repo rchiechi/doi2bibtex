@@ -40,7 +40,7 @@ def doi2bib():
         return home()
     logger.debug(f"Parsing {doi}")
     library = bibtex.read('')
-    result = util.doitobibtex(doi)
+    result = util.get_bibtex_from_url(doi)
     library.add(bibtex.read(result).entries)
     tex = list_dois(library)
     return render_template("success.html", HEAD='Bibtex Entry', MESSAGE=tex)

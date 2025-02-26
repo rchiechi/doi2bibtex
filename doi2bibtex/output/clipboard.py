@@ -8,7 +8,7 @@ layers = [
     m.LatexEncodingMiddleware(True)
 ]
 
-def do_clipboard(library, args):
+async def do_clipboard(library, args):
     bibtex_format = bibtexparser.BibtexFormat()
     bibtex_format.indent = '    '
     bibtex_format.block_separator = '\n\n'

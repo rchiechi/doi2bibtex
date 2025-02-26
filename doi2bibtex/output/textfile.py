@@ -9,7 +9,7 @@ bibtex_format.indent = '    '
 bibtex_format.block_separator = '\n\n'
 
 
-def do_textfile(library, args):
+async def do_textfile(library, args):
     if args.replace:
         _file = bibtex.replacedois(args.doifile, library, args.citecmd, args.trim)
         write_bib(library, args.bibtexdb)

@@ -94,7 +94,7 @@ def _geturl(url):
 async def _async_get_url(client, url):
     logger.debug(f"Fetching {url}")
     try:
-        response = await client.get(url)
+        response = await client.get(url, follow_redirects=True)
         response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
         print('.', end='')
         return response.json()

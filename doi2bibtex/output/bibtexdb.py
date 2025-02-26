@@ -13,13 +13,13 @@ layers = [
     m.LatexEncodingMiddleware(True)
 ]
 
-def do_bibtexdb(library: bibtexparser.library, args):
+async def do_bibtexdb(library: bibtexparser.library, args):
     journals = util.loadabbreviations(args.database,
                                       custom=args.custom,
                                       refresh=args.refresh)
     if args.clean and journals:
-        cleaner = bibtex.clean(library, journals)
-        library = cleaner.clean()
+        cleaner = bibtex.EntryCleaner(library, journals)
+        library = await cleaner.clean()
         journals.update(cleaner.custom)
         util.updatecache(journals)
     elif args.clean:

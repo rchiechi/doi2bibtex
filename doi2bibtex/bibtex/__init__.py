@@ -10,8 +10,8 @@ def read(fn, dedupe=False):
 def dedupe(library):
     return dedupe_bib_library(library)
 
-def clean(library, journals):
-    return EntryCleaner(library, journals)
+# def clean(library, journals):
+#     return EntryCleaner(library, journals)
 
 def replacedois(fn, library, citecmd, trim):
     return replace_doi_in_file(fn, library, citecmd, trim)
