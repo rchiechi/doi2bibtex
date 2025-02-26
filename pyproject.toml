@@ -25,6 +25,7 @@ flask = '>=3.0.3'
 waitress = '>=3.0.0'
 httpx = '>=0.28.1'
 asyncio-throttle = '>=1.0.2'
+python-Levenshtein = '>=0.23.0'
 
 [tool.poetry.dev-dependencies] # Development dependencies
 pytest = "^7.0"
