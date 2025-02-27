@@ -92,7 +92,7 @@ async def _parse_entry(entry, args, textf=None):
         try:
             entry.fields_dict[key].value
         except KeyError:
-            _field = await esolvedoi(doi, key)
+            _field = await resolvedoi(doi, key)
             entry.set_field(_field.fields_dict[key])
             print(f'{Style.BRIGHT}{Fore.BLUE}Added {key}: "{entry.fields_dict[key].value}" to {entry.key}')
     try:
