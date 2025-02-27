@@ -1,6 +1,7 @@
-from tempfile import TemporaryDirectory
+import os
+from tempfile import NamedTemporaryFile
 from quart import Quart, render_template, request, send_from_directory, jsonify
-from werkzeug.utils import secure_filename
+import magic
 from .output import list_dois
 import doi2bibtex.bibtex as bibtex
 import doi2bibtex.util as util
@@ -8,12 +9,18 @@ import doi2bibtex.util as util
 
 logger = util.getlogger(__name__)
 
-UPLOAD_FOLDER = TemporaryDirectory()
 ALLOWED_EXTENSIONS = {'txt', 'bib', 'tex'}
+ALLOWED_MIMETYPES = {"text/plain", "text/x-bibtex", "application/x-latex"}
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def secure_filename(filename):
+    _, ext = os.path.splitext(filename)
+    return str(uuid.uuid4()) + ext
+
+def is_allowed_file(file_content, filename):
+    file_mime = magic.from_buffer(file_content, mime=True)
+    _, file_extension = os.path.splitext(filename)
+    return file_extension.lower() in ALLOWED_EXTENSIONS and file_mime in ALLOWED_MIMETYPES
+
 
 async def getparam(param) -> str:
     """Get parameters of GET or POST request."""
@@ -26,11 +33,15 @@ async def getparam(param) -> str:
     return None
 
 app = Quart(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER.name
 
 @app.route("/")
 async def home():
-    return await render_template("index.html", TITLE="doi2bibtex")
+    parse_options = ('bibtex', 'references cited', 'citing references')
+    upload_options = ('bibtexdb', 'markdown')
+    return await render_template("index.html",
+                                TITLE="doi2bibtex",
+                                parse_options=parse_options,
+                                upload_options=upload_options)
 
 @app.route("/doi2bib", methods = ['GET', 'POST'])
 async def doi2bib():
@@ -49,6 +60,25 @@ async def doi2bib():
 async def upload():
     filetype = await getparam('filetype') or 'bibtexdb'
     return await render_template("fileupload.html", TITLE="Upload", FILETYPE=filetype)
+
+@app.route('/upload', methods=['POST'])
+async def upload_file():
+    file = await request.files.get('file')
+    if file:
+        file_content = await file.read()
+        if is_allowed_file(file_content, file.filename):
+            #file_path = NamedTemporaryFile()
+            # secure_name = secure_filename(file.filename)
+            # file_path = os.path.join("/tmp", secure_name) #Change this to your upload directory
+            # with open(file_path, 'wb') as f:
+            #file_path.write(file_content)
+            with NamedTemporaryFile() as file_path:
+                file_path.write(file_content)
+            logger.debug(f"File uploaded successfully as {file_path.name}")
+        else:
+            logger.debug("Invalid file type.")
+    else:
+        logger.debug("No file uploaded.")
 
 @app.route('/success', methods = ['GET', 'POST'])   
 async def success():

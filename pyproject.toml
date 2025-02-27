@@ -24,7 +24,7 @@ argcomplete = '>=3.3.0'
 quart = '>=0.20.0'
 httpx = '>=0.28.1'
 asyncio-throttle = '>=1.0.2'
-werkzeug = '>=3.0.3'
+python-magic = '>=0.4.27'
 
 [tool.poetry.dev-dependencies] # Development dependencies
 pytest = "^7.0"
