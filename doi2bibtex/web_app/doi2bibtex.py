@@ -41,26 +41,47 @@ app = Quart(__name__)
 
 @app.route("/")
 async def home():
-    parse_options = ('doi2bibtex',)#, 'references cited', 'citing references')
+    parse_options = ('doi2bibtex', 'references cited', 'citing references')#, 'references cited', 'citing references')
     upload_options = ('bibtex', 'bibtexdb')
     return await render_template("index.html",
                                 TITLE="doi2bibtex",
                                 parse_options=parse_options,
                                 upload_options=upload_options)
 
+
 @app.route("/doi2bib", methods = ['GET', 'POST'])
 async def doi2bib():
     doi = await getparam('doi')
     doi_action = await getparam('parseoption')
+    doi_format = await getparam('formatoption')
     if doi is None:
         flash('No DOI found')
         return home()
     logger.debug(f"Parsing {doi}")
+    dois = [doi]
+    if doi_action == 'references cited':
+        dois = await bibtex.async_get_cited(dois)
+    elif doi_action == 'citing references':
+        dois = await bibtex.async_get_citing(dois)
     library = bibtex.read('')
-    result = await util.async_get_bibtex_from_url(doi)
-    library.add(bibtex.read(result).entries)
-    tex = list_dois(library)
-    return await render_template("success.html", HEAD='Bibtex Entry', MESSAGE=tex)
+    async def process_doi(doi):
+        nonlocal library
+        if not doi:
+            return
+        async with throttler:
+            result = await util.async_get_bibtex_from_url(doi)
+        if result: 
+            library.add(bibtex.read(result).entries[0])
+    tasks = [process_doi(doi) for doi in set(dois)]
+    await asyncio.gather(*tasks)        
+
+    if doi_format == 'bibtexdb':        
+        with NamedTemporaryFile() as file_path:
+            write_bib(library, file_path.name)
+            return await send_file(file_path.name, as_attachment=True, attachment_filename="library.bib")
+    else:
+        tex = list_dois(library)
+        return await render_template("success.html", HEAD='Bibtex Entry', MESSAGE=tex)
 
 @app.route('/upload', methods=['POST'])
 async def upload_file():

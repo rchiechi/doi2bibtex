@@ -46,6 +46,12 @@
 										</header>
 										<p><form action = "/doi2bib" method = "post" enctype="multipart/form-data">   
 												<input type="text" name="doi" />
+												<br><b>Choose format</b><br>
+												<select name="formatoption">
+													{% for option in upload_options %}
+													<option value="{{ option }}" {% if option == selected_option %}selected{% endif %}>{{ option }}</option>
+													{% endfor %}
+												</select>
 												<br><b>Choose action</b><br>
 												<select name="parseoption">
 													{% for option in parse_options %}
@@ -61,7 +67,7 @@
 							</section>
 
 						<!-- Upload a file -->
-							<section id="upload" class="main special">
+							<section id="upload" class="main">
 								<header class="major">
 									<h2>Upload a file to parse</h2>
 								</header>
