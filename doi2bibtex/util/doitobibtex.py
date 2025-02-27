@@ -33,7 +33,7 @@ async def async_get_bibtex_from_url(doi: Union[str, bytes, None]) -> str:
         except httpx.HTTPStatusError as err:
             if err.response.status_code == 404:
                 logger.error(f"Could not resolve {doi}")
-            elif err.HTTPStatusError == 429:
+            elif err.response.status_code == 429:
                 logger.error(f"Rate-limit exteeded for {BASE_URL}")
             else:
                 logger.error(f"Error {err.response.status_code} while fetching {url}")

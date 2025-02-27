@@ -23,3 +23,12 @@ def write_bib(library: bibtexparser.library, db: str):
     bibtex_format.indent = '    '
     bibtex_format.block_separator = '\n\n'
     bibtexparser.write_file(db, library, bibtex_format=bibtex_format)
+
+def bib_string(library: bibtexparser.library):
+    bibtex_format = bibtexparser.BibtexFormat()
+    bibtex_format.indent = '    '
+    bibtex_format.block_separator = '\n\n'
+    return bibtexparser.write_string(library, bibtex_format=bibtex_format)
+
+def bib_bytes(library: bibtexparser.library):
+    return bytes(bib_string(library), encoding='utf-8')

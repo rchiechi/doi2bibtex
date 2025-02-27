@@ -1,9 +1,9 @@
 import os
 import asyncio
-from tempfile import NamedTemporaryFile
+from io import BytesIO
 from quart import Quart, render_template, request, send_from_directory, jsonify, send_file
 import magic
-from .output import list_dois, write_bib
+from .output import list_dois, bib_bytes
 import doi2bibtex.bibtex as bibtex
 import doi2bibtex.util as util
 from asyncio_throttle import Throttler
@@ -13,7 +13,7 @@ logger = util.getlogger(__name__)
 ALLOWED_EXTENSIONS = {'.txt', '.bib', '.tex'}
 ALLOWED_MIMETYPES = {"text/plain", "text/x-bibtex", "application/x-latex"}
 
-throttler = Throttler(rate_limit=5, period=1)
+throttler = Throttler(rate_limit=3, period=1)
 
 def secure_filename(filename):
     _, ext = os.path.splitext(filename)
@@ -76,9 +76,9 @@ async def doi2bib():
     await asyncio.gather(*tasks)        
 
     if doi_format == 'bibtexdb':        
-        with NamedTemporaryFile() as file_path:
-            write_bib(library, file_path.name)
-            return await send_file(file_path.name, as_attachment=True, attachment_filename="library.bib")
+        file_path = BytesIO(bib_bytes(library))
+        file_path.seek(0)
+        return await send_file(file_path, as_attachment=True, attachment_filename="library.bib")
     else:
         tex = list_dois(library)
         return await render_template("success.html", HEAD='Bibtex Entry', MESSAGE=tex)
@@ -125,9 +125,10 @@ async def upload_file():
     await asyncio.gather(*tasks)
     
     if doi_format == 'bibtexdb':        
-        with NamedTemporaryFile() as file_path:
-            write_bib(library, file_path.name)
-            return await send_file(file_path.name, as_attachment=True, attachment_filename="library.bib")
+        file_path = BytesIO(bib_bytes(library))
+        file_path.seek(0)
+        return await send_file(file_path, as_attachment=True, attachment_filename="library.bib")
+
     elif doi_format == 'bibtex':
         tex = list_dois(library)
         return await render_template("success.html", HEAD='Bibtex Entry', MESSAGE=tex)
