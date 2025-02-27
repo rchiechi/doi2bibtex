@@ -21,11 +21,11 @@ pyperclip = '>=1.8.2'
 pylatexenc = '>=2.10'
 iso4 = '>=0.0.2'
 argcomplete = '>=3.3.0'
-flask = '>=3.0.3'
-waitress = '>=3.0.0'
+quart = '>=0.20.0'
 httpx = '>=0.28.1'
 asyncio-throttle = '>=1.0.2'
 python-Levenshtein = '>=0.23.0'
+werkzeug = '>=3.0.3'
 
 [tool.poetry.dev-dependencies] # Development dependencies
 pytest = "^7.0"

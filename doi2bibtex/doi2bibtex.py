@@ -24,7 +24,7 @@ async def async_main():
     logger.debug("Debug logging enabled.")
     if args.outputmode == 'webserver':
         logger.info(f"Starting server on {args.addr}:{args.port}")
-        web_app.web_server(args.addr, args.port)
+        await web_app.web_server(args.addr, args.port)
         sys.exit()
     
     if args.bibtexdb:

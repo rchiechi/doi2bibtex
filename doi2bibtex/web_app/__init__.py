@@ -1,5 +1,12 @@
-from waitress import serve
+import asyncio
+from hypercorn.config import Config
+from hypercorn.asyncio import serve
 from . import doi2bibtex
 
-def web_server(addr, port):
-    serve(doi2bibtex.app, host=addr, port=port)
+async def web_server(addr, port):
+    config = Config()
+    config.bind = [f"{addr}:{port}"]
+    config.worker_class = "asyncio"
+    config.trusted_proxy = '*'
+    config.forwarded_allow_ips = '*'
+    await serve(doi2bibtex.app, config)
