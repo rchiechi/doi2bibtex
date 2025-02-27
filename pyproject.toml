@@ -24,7 +24,6 @@ argcomplete = '>=3.3.0'
 quart = '>=0.20.0'
 httpx = '>=0.28.1'
 asyncio-throttle = '>=1.0.2'
-python-Levenshtein = '>=0.23.0'
 werkzeug = '>=3.0.3'
 
 [tool.poetry.dev-dependencies] # Development dependencies
