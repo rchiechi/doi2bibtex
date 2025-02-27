@@ -1,16 +1,19 @@
 import os
+import asyncio
 from tempfile import NamedTemporaryFile
-from quart import Quart, render_template, request, send_from_directory, jsonify
+from quart import Quart, render_template, request, send_from_directory, jsonify, send_file
 import magic
-from .output import list_dois
+from .output import list_dois, write_bib
 import doi2bibtex.bibtex as bibtex
 import doi2bibtex.util as util
-
+from asyncio_throttle import Throttler
 
 logger = util.getlogger(__name__)
 
-ALLOWED_EXTENSIONS = {'txt', 'bib', 'tex'}
+ALLOWED_EXTENSIONS = {'.txt', '.bib', '.tex'}
 ALLOWED_MIMETYPES = {"text/plain", "text/x-bibtex", "application/x-latex"}
+
+throttler = Throttler(rate_limit=5, period=1)
 
 def secure_filename(filename):
     _, ext = os.path.splitext(filename)
@@ -19,7 +22,9 @@ def secure_filename(filename):
 def is_allowed_file(file_content, filename):
     file_mime = magic.from_buffer(file_content, mime=True)
     _, file_extension = os.path.splitext(filename)
+    logger.debug(f"File magic: {file_mime}")
     return file_extension.lower() in ALLOWED_EXTENSIONS and file_mime in ALLOWED_MIMETYPES
+
 
 
 async def getparam(param) -> str:
@@ -36,8 +41,8 @@ app = Quart(__name__)
 
 @app.route("/")
 async def home():
-    parse_options = ('bibtex', 'references cited', 'citing references')
-    upload_options = ('bibtexdb', 'markdown')
+    parse_options = ('doi2bibtex',)#, 'references cited', 'citing references')
+    upload_options = ('bibtex', 'bibtexdb')
     return await render_template("index.html",
                                 TITLE="doi2bibtex",
                                 parse_options=parse_options,
@@ -46,6 +51,7 @@ async def home():
 @app.route("/doi2bib", methods = ['GET', 'POST'])
 async def doi2bib():
     doi = await getparam('doi')
+    doi_action = await getparam('parseoption')
     if doi is None:
         flash('No DOI found')
         return home()
@@ -56,30 +62,58 @@ async def doi2bib():
     tex = list_dois(library)
     return await render_template("success.html", HEAD='Bibtex Entry', MESSAGE=tex)
 
-@app.route("/upload")
-async def upload():
-    filetype = await getparam('filetype') or 'bibtexdb'
-    return await render_template("fileupload.html", TITLE="Upload", FILETYPE=filetype)
-
 @app.route('/upload', methods=['POST'])
 async def upload_file():
-    file = await request.files.get('file')
+    files = await request.files
+    file = files.get('file')
+    _, ext = os.path.splitext(file.filename)
+    if ext.lower() != '.txt':
+        logger.debug(f"{file.filename} has bad extension {ext}")
+        return await render_template("success.html",
+                                      HEAD='Cannot parse',
+                                      MESSAGE='I can only parse .txt files for now.')
+    doi_format = await getparam('uploadoption')
     if file:
-        file_content = await file.read()
-        if is_allowed_file(file_content, file.filename):
-            #file_path = NamedTemporaryFile()
-            # secure_name = secure_filename(file.filename)
-            # file_path = os.path.join("/tmp", secure_name) #Change this to your upload directory
-            # with open(file_path, 'wb') as f:
-            #file_path.write(file_content)
-            with NamedTemporaryFile() as file_path:
-                file_path.write(file_content)
-            logger.debug(f"File uploaded successfully as {file_path.name}")
-        else:
+        file_content = file.read()
+        if not is_allowed_file(file_content, file.filename):
+        # else:
             logger.debug("Invalid file type.")
+            return await render_template("success.html",
+                                         HEAD='Cannot parse',
+                                         MESSAGE='I can only parse .txt files for now.')
     else:
         logger.debug("No file uploaded.")
-
+        return await render_template("success.html",
+                                     HEAD='Cannot parse',
+                                     MESSAGE='I did not receive a file.')
+    dois = []
+    file_content = str(file_content, encoding='utf8').strip()
+    for delim in (',' ,' ', ';'):
+        dois = file_content.split(delim)
+    dois += file_content.split('\n')
+    library = bibtex.read('')
+    async def process_doi(doi):
+        nonlocal library
+        if not doi:
+            return
+        async with throttler:
+            result = await util.async_get_bibtex_from_url(doi)
+        if result: 
+            library.add(bibtex.read(result).entries[0])
+    tasks = [process_doi(doi) for doi in set(dois)]
+    await asyncio.gather(*tasks)
+    
+    if doi_format == 'bibtexdb':        
+        with NamedTemporaryFile() as file_path:
+            write_bib(library, file_path.name)
+            return await send_file(file_path.name, as_attachment=True, attachment_filename="library.bib")
+    elif doi_format == 'bibtex':
+        tex = list_dois(library)
+        return await render_template("success.html", HEAD='Bibtex Entry', MESSAGE=tex)
+    else:
+        tex = list_dois(library)
+        return await render_template("success.html", HEAD='Unknown format', MESSAGE='')
+    
 @app.route('/success', methods = ['GET', 'POST'])   
 async def success():
     # check if the post request has the file part

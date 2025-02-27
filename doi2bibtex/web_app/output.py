@@ -17,3 +17,9 @@ def list_dois(library, **kwargs):
         cleaner = unicodeTolatex()
         bibtex = cleaner.parsestring(bibtex)
     return bibtex
+
+def write_bib(library: bibtexparser.library, db: str):
+    bibtex_format = bibtexparser.BibtexFormat()
+    bibtex_format.indent = '    '
+    bibtex_format.block_separator = '\n\n'
+    bibtexparser.write_file(db, library, bibtex_format=bibtex_format)
