@@ -178,7 +178,7 @@ def _Markdownblock(formatted, textf, args):
         txt.append('%s %s' % (textf['heading'][0], _year))
         for _pub in formatted['journals'][_year]:
             txt.append(f'- {_pub}')
-    return '\n'.join(txt)
+    return '\n\n'.join(txt)
 
 def _TXTblock(formatted, args):
     txt = []
