@@ -1,12 +1,18 @@
 import os
 import asyncio
 from io import BytesIO
-from quart import Quart, render_template, request, send_from_directory, jsonify, send_file
-import magic
 from .output import list_dois, bib_bytes
 import doi2bibtex.bibtex as bibtex
 import doi2bibtex.util as util
 from asyncio_throttle import Throttler
+
+OK_TO_RUN=False
+try:
+    from quart import Quart, render_template, request, send_from_directory, jsonify, send_file
+    import magic
+    OK_TO_RUN=True
+except ImportError as e:
+    print(f"Error importing package, you will not be able to run the web_server: {e}")
 
 logger = util.getlogger(__name__)
 
