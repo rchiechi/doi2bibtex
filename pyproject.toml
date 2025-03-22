@@ -25,7 +25,7 @@ quart = '>=0.20.0'
 httpx = '>=0.28.1'
 asyncio-throttle = '>=1.0.2'
 python-magic = '>=0.4.27'
-
+tqdm = "^4.67.1"
 [tool.poetry.dev-dependencies] # Development dependencies
 pytest = "^7.0"
 

@@ -10,6 +10,7 @@ import doi2bibtex.bibtex as bibtex
 import doi2bibtex.output as output
 import doi2bibtex.web_app as web_app
 from colorama import init, Fore, Style
+from tqdm.asyncio import tqdm_asyncio
 
 # Setup colors
 init(autoreset=True)
@@ -52,10 +53,10 @@ async def async_main():
         nonlocal added
         nonlocal incr
         if not doi:
-            print(f'{Fore.BLUE}{Style.BRIGHT}_', end=Style.RESET_ALL)
+            # print(f'{Fore.BLUE}{Style.BRIGHT}_', end=Style.RESET_ALL)
             return
         if doi.lower() in dois_in_library:
-            print(f'{Fore.RED}{Style.BRIGHT}!', end=Style.RESET_ALL)
+            # print(f'{Fore.RED}{Style.BRIGHT}!', end=Style.RESET_ALL)
             return
         #print(f'{Style.BRIGHT}*', end=Style.RESET_ALL)
         async with throttler:
@@ -68,12 +69,12 @@ async def async_main():
                 #print(f"|{Fore.YELLOW}Duplicate key replaced with {_entry.key}|", end=Style.RESET_ALL)
             library.add(_entry)
             citekeys_in_library.append(_entry.key.lower())
-            print(f"|{Fore.GREEN}{_entry.key}:{doi}", end=Style.RESET_ALL+'|')
+            # print(f"|{Fore.GREEN}{_entry.key}:{doi}", end=Style.RESET_ALL+'|')
             added += 1
-        else:
-            print(f'{Fore.RED}{Style.BRIGHT}X', end=Style.RESET_ALL)
+        # else:
+        #     print(f'{Fore.RED}{Style.BRIGHT}X', end=Style.RESET_ALL)
     tasks = [process_doi(doi) for doi in set(dois)]
-    await asyncio.gather(*tasks)
+    await tqdm_asyncio.gather(*tasks)
     
     print('')
     if added:
