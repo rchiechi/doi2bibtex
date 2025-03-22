@@ -22,7 +22,7 @@ class Spinner:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         print(cm.Style.RESET_ALL, end="\r")
         print("\033[2K", end="", flush=True)
-        print("\033[?25h", end="", flush=True)
+        print("\033[?25h", end="\r", flush=True)
         return False
     
     async def update(self):
