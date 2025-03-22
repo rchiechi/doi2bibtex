@@ -74,7 +74,7 @@ async def async_main():
         # else:
         #     print(f'{Fore.RED}{Style.BRIGHT}X', end=Style.RESET_ALL)
     tasks = [process_doi(doi) for doi in set(dois)]
-    await tqdm_asyncio.gather(*tasks)
+    await tqdm_asyncio.gather(*tasks, colour='blue', unit='bib')
     
     print('')
     if added:
