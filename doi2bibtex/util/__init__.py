@@ -6,6 +6,7 @@ from .cache import loadcache, writetodisk
 from .abbreviso import local_iso4
 from .LaTexAccents import AccentConverter
 from .encode import LatexEncoder
+from .spinner import Spinner
 
 # def doitobibtex(doi):
 #     return get_bibtex_from_url(doi)

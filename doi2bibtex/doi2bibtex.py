@@ -73,10 +73,17 @@ async def async_main():
             added += 1
         # else:
         #     print(f'{Fore.RED}{Style.BRIGHT}X', end=Style.RESET_ALL)
-    tasks = [process_doi(doi) for doi in set(dois)]
-    await tqdm_asyncio.gather(*tasks, colour='blue', unit='bib')
     
-    print('')
+    if len(dois) < 10:
+        async with util.Spinner("Resolving: ") as spinner:
+            tasks = [asyncio.create_task(process_doi(doi)) for doi in set(dois)]
+            pending = set(tasks)
+            while pending:
+                done, pending = await asyncio.wait(pending, timeout=0.1, return_when=asyncio.FIRST_COMPLETED)
+                await spinner.update()
+    else:
+        tasks = [process_doi(doi) for doi in set(dois)]
+        await tqdm_asyncio.gather(*tasks, colour='blue', unit='bib')
     if added:
         print(f"{Fore.CYAN}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
 
