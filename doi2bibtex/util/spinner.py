@@ -33,7 +33,7 @@ class Spinner:
                 print(f"{self.styles[randint(0, len(self.styles)-1)]}", end="")
                 print(f"{self.colors_fore[randint(0, len(self.colors_fore)-1)]}", end="")
                 print(chr, end="")
-        print(f"{cm.Style.RESET_ALL}: ", end="")
+            print(f"{cm.Style.RESET_ALL}: ", end="")
         print(f"{self.styles[randint(0, len(self.styles)-1)]}", end="")
         print(f"{self.colors_fore[randint(0, len(self.colors_fore)-1)]}", end="")
         # print(f"{self.colors_back[randint(0, len(self.colors_back)-1)]}", end="")
