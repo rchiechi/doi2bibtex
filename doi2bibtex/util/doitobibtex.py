@@ -7,6 +7,7 @@ from typing import Union
 import httpx
 from .getlogger import return_logger
 from colorama import Fore, Style
+from json import JSONDecodeError
 
 BASE_URL = 'https://dx.doi.org/'
 PAGERES = (re.compile(r'^\d+\.\d+/\D+\.20(\d+)$'),
@@ -66,6 +67,8 @@ async def add_pages(bibtex, doi):
                 logger.error(f"Error {err.response.status_code} while fetching {url}")
         except httpx.InvalidURL:
             logger.error(f"'{doi}' is not a valid url")
+        except JSONDecodeError:
+            logger.error(f"{url} did not return valid json.")
         except httpx.ReadTimeout:
             logger.error(f"Timeout fetching {url}")
     for key in ('article-number',):
