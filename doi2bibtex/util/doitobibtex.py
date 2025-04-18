@@ -74,7 +74,7 @@ async def add_pages(bibtex, doi):
     for key in ('article-number',):
         if key in json_bib:
             page = json_bib[key]
-            print(f"{Fore.YELLOW}page={page} from {key}", end=Style.RESET_ALL)
+            logger.info(f"{Fore.YELLOW}page={page} from {key}{Style.RESET_ALL}")
             _biblist = bibtex.split(',')
             _biblist.insert(-1, f'pages={page}')
             return ','.join(_biblist)
@@ -87,7 +87,7 @@ def guess_pages(bibtex, doi):
         m = re.match(_pagere, doi)
         try:
             page = m.group(1)
-            print(f"{Fore.YELLOW}page={page} from {doi}", end=Style.RESET_ALL)
+            logger.info(f"{Fore.YELLOW}page={page} from {doi}{Style.RESET_ALL}")
             break
         except (AttributeError, IndexError):
             continue

@@ -12,9 +12,33 @@ import doi2bibtex.output as output
 import doi2bibtex.web_app as web_app
 from colorama import init, Fore, Style
 from tqdm.asyncio import tqdm_asyncio
+import logging
+from contextlib import contextmanager
 
 # Setup colors
 init(autoreset=True)
+ 
+@contextmanager
+def _buffer_logs():
+    """Temporarily buffer all 'doi2bib' logger output and flush after context."""
+    root_logger = logging.getLogger('doi2bib')
+    orig_handlers = root_logger.handlers[:]
+    buf_records = []
+    class BufferHandler(logging.Handler):
+        def emit(self, record):
+            buf_records.append(record)
+    buf_handler = BufferHandler()
+    # Replace handlers with buffer
+    root_logger.handlers = [buf_handler]
+    try:
+        yield
+    finally:
+        # Flush buffered records
+        for rec in buf_records:
+            for h in orig_handlers:
+                h.handle(rec)
+        # Restore original handlers
+        root_logger.handlers = orig_handlers
 
 
 
@@ -84,7 +108,9 @@ async def async_main():
                 await spinner.update()
     else:
         tasks = [process_doi(doi) for doi in set(dois)]
-        await tqdm_asyncio.gather(*tasks, colour='blue', unit='bib')
+        # Buffer log messages during the progress bar to avoid interleaving
+        with _buffer_logs():
+            await tqdm_asyncio.gather(*tasks, colour='blue', unit='bib')
     if added:
         print(f"{Fore.CYAN}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
     # Summarize any OpenAlex fetch failures
