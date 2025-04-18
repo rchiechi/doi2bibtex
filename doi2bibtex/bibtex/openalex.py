@@ -6,6 +6,7 @@ import json
 from typing import List
 from urllib.parse import urlencode
 import httpx
+import random
 from asyncio_throttle import Throttler
 from doi2bibtex.util.getlogger import return_logger
 from colorama import Fore, Style
@@ -15,6 +16,12 @@ BASE_URL = 'https://api.openalex.org/works'
 logger = return_logger(__name__)
 
 throttler = Throttler(rate_limit=10, period=1)  # 10 requests per second (OpenAlex limit)
+
+failures = []
+
+def get_failures():
+    """Return list of failed OpenAlex fetches as (url, error_message) tuples."""
+    return failures
 
 # def get_work_by(id, **kwargs):
 #     if isinstance(id, bytes):
@@ -94,25 +101,59 @@ async def async_get_work_by(id, **kwargs):
 #         logger.error(f"'{url}' is not a valid url")
 #     return work
 
-async def _async_get_url(client, url):
+async def _async_get_url(client, url, retries: int = 5, timeout: float = 10.0):
+    """Fetch URL with retries and exponential backoff. Records failures."""
     logger.debug(f"Fetching {url}")
-    try:
-        response = await client.get(url, follow_redirects=True)
-        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
-        print(f'{Style.BRIGHT}.', end=Style.RESET_ALL)
-        return response.json()
-    except httpx.HTTPStatusError as err:
-        if err.response.status_code == 404:
-            logger.error(f"Could not resolve with openalex: {url}")
-        else:
-            logger.error(f"Error {err.response.status_code} while fetching {url}")
-        return {}
-    except json.JSONDecodeError:
-        logger.error(f"Invalid JSON response from {url}")
-        return {}
-    except httpx.InvalidURL:
-        logger.error(f"'{url}' is not a valid url")
-        return {}
+    backoff = 1.0
+    for attempt in range(1, retries + 1):
+        try:
+            response = await client.get(url, follow_redirects=True, timeout=timeout)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as err:
+            status = err.response.status_code
+            if status == 429 or 500 <= status < 600:
+                if attempt < retries:
+                    sleep_time = min(backoff, 10.0) + random.random()
+                    logger.warning(f"HTTP {status} fetching {url}, retry {attempt}/{retries}, retrying in {sleep_time:.1f}s")
+                    await asyncio.sleep(sleep_time)
+                    backoff *= 2
+                    continue
+                else:
+                    msg = f"HTTP {status} fetching {url} after {retries} attempts"
+                    logger.error(msg)
+                    failures.append((url, msg))
+                    return {}
+            else:
+                if status == 404:
+                    msg = f"Could not resolve with openalex: {url} (status 404)"
+                else:
+                    msg = f"Error {status} while fetching {url}"
+                logger.error(msg)
+                failures.append((url, msg))
+                return {}
+        except (httpx.RequestError, httpx.ReadTimeout) as err:
+            if attempt < retries:
+                sleep_time = min(backoff, 10.0) + random.random()
+                logger.warning(f"{err.__class__.__name__} fetching {url}: {err}, retry {attempt}/{retries}, retrying in {sleep_time:.1f}s")
+                await asyncio.sleep(sleep_time)
+                backoff *= 2
+                continue
+            else:
+                msg = f"{err.__class__.__name__} fetching {url} after {retries} attempts: {err}"
+                logger.error(msg)
+                failures.append((url, msg))
+                return {}
+        except json.JSONDecodeError as err:
+            msg = f"Invalid JSON response from {url}: {err}"
+            logger.error(msg)
+            failures.append((url, msg))
+            return {}
+        except httpx.InvalidURL as err:
+            msg = f"Invalid URL {url}: {err}"
+            logger.error(msg)
+            failures.append((url, msg))
+            return {}
 
 # def get_cited(dois):
 #     _dois = []

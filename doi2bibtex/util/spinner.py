@@ -1,4 +1,5 @@
 from random import randint
+import colorama as cm
 
 class Spinner:
     spinner = ('⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷')

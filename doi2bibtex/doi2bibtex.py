@@ -7,6 +7,7 @@ from asyncio_throttle import Throttler
 import doi2bibtex.opts as opts
 import doi2bibtex.util as util
 import doi2bibtex.bibtex as bibtex
+from doi2bibtex.bibtex.openalex import get_failures
 import doi2bibtex.output as output
 import doi2bibtex.web_app as web_app
 from colorama import init, Fore, Style
@@ -86,6 +87,13 @@ async def async_main():
         await tqdm_asyncio.gather(*tasks, colour='blue', unit='bib')
     if added:
         print(f"{Fore.CYAN}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
+    # Summarize any OpenAlex fetch failures
+    failures = get_failures()
+    if failures:
+        print()
+        print(f"{Fore.RED}⚠️  {len(failures)} OpenAlex fetches failed.{Style.RESET_ALL}")
+        for url, msg in failures:
+            print(f"  • {url}: {msg}")
 
     await getattr(output, args.outputmode)(library, args)
 
