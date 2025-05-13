@@ -42,6 +42,8 @@ async def async_get_bibtex_from_url(doi: Union[str, bytes, None]) -> str:
             logger.error(f"'{doi}' is not a valid url")
         except httpx.ReadTimeout:
             logger.error(f"Timeout fetching {url}")
+        except httpx.ConnectError as err:
+            logger.error(f"Connection error fetching {url}: {err}")
     if 'pages' not in bibtex.lower():
         bibtex = await add_pages(bibtex, doi)
     return bibtex
@@ -71,6 +73,8 @@ async def add_pages(bibtex, doi):
             logger.error(f"{url} did not return valid json.")
         except httpx.ReadTimeout:
             logger.error(f"Timeout fetching {url}")
+        except httpx.ConnectError as err:
+            logger.error(f"Connection error fetching {url}: {err}")
     for key in ('article-number',):
         if key in json_bib:
             page = json_bib[key]
