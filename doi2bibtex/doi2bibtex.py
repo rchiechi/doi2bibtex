@@ -87,17 +87,20 @@ async def async_main():
         async with throttler:
             result = await util.async_get_bibtex_from_url(doi)
         if result:
-            _entry = bibtex.read(result).entries[0]
-            if _entry.key.lower() in citekeys_in_library:
-                _entry.key = f"{_entry.key}_{incr}"
-                incr += 1
-                #print(f"|{Fore.YELLOW}Duplicate key replaced with {_entry.key}|", end=Style.RESET_ALL)
-            library.add(_entry)
-            citekeys_in_library.append(_entry.key.lower())
-            # print(f"|{Fore.GREEN}{_entry.key}:{doi}", end=Style.RESET_ALL+'|')
-            added += 1
-        # else:
-        #     print(f'{Fore.RED}{Style.BRIGHT}X', end=Style.RESET_ALL)
+            try:
+                _entry = bibtex.read(result).entries[0]
+                if _entry.key.lower() in citekeys_in_library:
+                    _entry.key = f"{_entry.key}_{incr}"
+                    incr += 1
+                    #print(f"|{Fore.YELLOW}Duplicate key replaced with {_entry.key}|", end=Style.RESET_ALL)
+                library.add(_entry)
+                citekeys_in_library.append(_entry.key.lower())
+                # print(f"|{Fore.GREEN}{_entry.key}:{doi}", end=Style.RESET_ALL+'|')
+                added += 1
+            # else:
+            #     print(f'{Fore.RED}{Style.BRIGHT}X', end=Style.RESET_ALL)
+            except IndexError:
+                logger.warning(f"Error adding doi: {doi}")
     
     if len(dois) < 10:
         async with util.Spinner("Resolving: ") as spinner:
