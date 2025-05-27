@@ -73,7 +73,8 @@ async def do_pdfs(library, args):
             # Failure details are already logged by the download functions
             # and available via get_download_failures()
             pass # logger.warning(f"Failed to download PDF from {url}. See failure list for details.")    
-    logger.info(f"Successful downloads: {successful_downloads} / {total_entries - len(errs)} Failed to resolve {len(errs)} dois.")
+    if errs:
+        logger.warning(f"Successful downloads: {successful_downloads} / {total_entries - len(errs)} Failed to resolve {len(errs)} dois.")
 
 async def async_get_pdf_links_from_urls(url: Union[str, bytes, None], proxy) -> str:
     if url is None:
