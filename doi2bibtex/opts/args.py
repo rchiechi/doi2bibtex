@@ -102,7 +102,7 @@ subparser_clipboard.add_argument('--stdout', action='store_true', default=False,
 subparser_clipboard.add_argument('--noclean', action='store_true', default=False,
                                  help='Do not convert unicode to LaTeX.')
 
-# # #  Clipboard subparser options # # #
+# # #  PDF downloader subparser options # # #
 subparser_pdf = subparsers.add_parser('pdf', help='Download a PDF from a doi.')
 
 subparser_pdf.add_argument('more_dois', type=str, nargs='*', default=[],

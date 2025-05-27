@@ -3,8 +3,9 @@ import asyncio
 import logging
 import random
 from typing import List, Optional, Union, Tuple, Dict
+from .getlogger import return_logger as getlogger
 
-logger = logging.getLogger(__name__)
+logger = getlogger(__name__)
 
 # Global list to store information about failed downloads
 download_failures: List[Tuple[str, str]] = []
@@ -38,8 +39,8 @@ async def download_pdf_from_url(
         The PDF content as bytes if successful, otherwise None.
         Failures are recorded in the global `download_failures` list.
     """
-    logger.info(f"Attempting to download PDF from: {url}")
-    current_backoff_delay = 1.0  # Initial backoff delay in seconds
+    logger.debug(f"Attempting to download PDF from: {url}")
+    current_backoff_delay = 5.0  # Initial backoff delay in seconds
 
     for attempt in range(1, retries + 1):
         try:
@@ -52,7 +53,7 @@ async def download_pdf_from_url(
             # Check if the Content-Type indicates a PDF
             if not content_type.startswith("application/pdf"):
                 msg = f"Content-Type is not application/pdf (was: {content_type})"
-                logger.warning(f"Download attempt {attempt} for {url} failed: {msg}")
+                logger.debug(f"Download attempt {attempt} for {url} failed: {msg}")
                 # This is likely a permanent issue with the URL/server, so don't retry for this specific error.
                 # If it's the last attempt, record the failure.
                 if attempt == retries:
@@ -62,12 +63,12 @@ async def download_pdf_from_url(
             # Basic verification: PDF files should start with '%PDF-'
             if not response.content.startswith(b"%PDF-"):
                 msg = "Content does not appear to be a valid PDF (magic number '%PDF-' missing)."
-                logger.warning(f"Download attempt {attempt} for {url} failed: {msg}")
+                logger.debug(f"Download attempt {attempt} for {url} failed: {msg}")
                 # This could be an HTML error page served with a 200 OK and a misleading PDF Content-Type.
                 # Retry, as it *could* be a transient issue, though less likely.
                 if attempt < retries:
                     sleep_time = min(current_backoff_delay, 15.0) + (random.random() * 0.5) # Add jitter
-                    logger.info(f"Content validation failed for {url}, attempt {attempt}/{retries}. Retrying in {sleep_time:.2f}s...")
+                    logger.debug(f"Content validation failed for {url}, attempt {attempt}/{retries}. Retrying in {sleep_time:.2f}s...")
                     await asyncio.sleep(sleep_time)
                     current_backoff_delay *= 2  # Exponential backoff
                     continue # Go to next attempt
@@ -75,7 +76,7 @@ async def download_pdf_from_url(
                     download_failures.append((url, msg + f" after {retries} attempts."))
                     return None
 
-            logger.info(f"Successfully downloaded PDF from: {url} ({len(response.content)} bytes)")
+            logger.debug(f"Successfully downloaded PDF from: {url} ({len(response.content)} bytes)")
             return response.content
 
         except httpx.HTTPStatusError as err:
@@ -85,7 +86,7 @@ async def download_pdf_from_url(
             if status_code == 429 or 500 <= status_code < 600:
                 if attempt < retries:
                     sleep_time = min(current_backoff_delay, 15.0) + (random.random() * 0.5)
-                    logger.warning(
+                    logger.debug(
                         f"HTTP {status_code} for {url}, attempt {attempt}/{retries}. Retrying in {sleep_time:.2f}s. Error: {error_message}"
                     )
                     await asyncio.sleep(sleep_time)
@@ -112,7 +113,7 @@ async def download_pdf_from_url(
             error_message = f"{err.__class__.__name__}: {str(err)}"
             if attempt < retries:
                 sleep_time = min(current_backoff_delay, 15.0) + (random.random() * 0.5)
-                logger.warning(
+                logger.debug(
                     f"{error_message} fetching {url}, attempt {attempt}/{retries}. Retrying in {sleep_time:.2f}s"
                 )
                 await asyncio.sleep(sleep_time)
@@ -263,9 +264,9 @@ async def main_example():
     downloaded_pdfs = await download_pdfs(
         urls=test_urls,
         proxy=proxy_server,
-        concurrent_downloads=3, # Limit to 3 concurrent downloads for this example
+        concurrent_downloads=1, # Limit to 3 concurrent downloads for this example
         request_timeout=30.0,   # 30 seconds timeout for each request
-        num_retries=2           # 2 retries per URL (total 3 attempts)
+        num_retries=3           # 2 retries per URL (total 3 attempts)
     )
 
     logger.info("--- PDF Download Process Complete ---")
@@ -309,10 +310,10 @@ async def main_example():
 if __name__ == "__main__":
     # Configure a logger
     # Use a more descriptive format for logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s:%(lineno)d - %(message)s"
-    )
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format="%(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s:%(lineno)d - %(message)s"
+    # )
     # To run this example, you can uncomment the following line:
     asyncio.run(main_example())
     # For production use, integrate into your existing asyncio event loop.

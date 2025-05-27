@@ -3,7 +3,9 @@ import httpx
 from pathlib import Path
 import doi2bibtex.util as util
 from typing import List, Optional, Union, Tuple, Dict
-
+import asyncio
+import random
+from tqdm.asyncio import tqdm
 
 PDFURL = re.compile(r'//(.*\.pdf\?download=true)')
 
@@ -17,17 +19,28 @@ async def do_pdfs(library, args):
             # or httpx will choose based on URL. For more control, use dict.
             logger.warning(f"Assuming {proxy} is an http:// proxy.")
             proxy = f"http://{proxy}"
+    
+    # Determine the total number of entries for tqdm, if possible
+    total_entries = len(library.entries)   
     baseurl = args.mirror.strip('/')
     urls = {}
-    for entry in library.entries:
+    errs = []
+    for entry in tqdm(library.entries, desc="Resolving pdf links", total=total_entries, unit="doi"):
+    # for entry in library.entries:
         doi = _finddoi(entry)
         if not doi:
-            logger.warning(f"Could not resolve a doi from {entry}.")
+            errs.append(entry)
             continue
         url = await async_get_pdf_links_from_urls(f"{baseurl}/{doi}", args.proxy)
         if url:
             urls[doi] = f"https://{url}"
+        else:
+            errs.append(doi)
+        await asyncio.sleep(10 + (random.random() * 0.5))
     logger.debug(f"Processing {urls}")
+    if errs:
+        logger.warning(f"Could not get pdf links from {errs}.")
+
     
     pdfurls = {}
     for doi, url in urls.items():
@@ -39,12 +52,14 @@ async def do_pdfs(library, args):
         while pdfpath.exists():
             pdfpath = Path(Path(f"{pdfpath.name}_{i:02d}").with_suffix('.pdf'))
         pdfurls[url] = pdfpath
+   
     downloaded_pdfs = await util.downloadPDFs(list(pdfurls.keys()), proxy)
+    
     successful_downloads = 0
     for url, pdf_data in downloaded_pdfs.items():
         if pdf_data:
             successful_downloads += 1
-            logger.info(f"Successfully downloaded {len(pdf_data)} bytes from {url}")
+            logger.debug(f"Successfully downloaded {len(pdf_data)} bytes from {url}")
             pdfpath = pdfurls[url]
             try:
                 with pdfpath.open("wb") as f:
@@ -58,7 +73,7 @@ async def do_pdfs(library, args):
             # Failure details are already logged by the download functions
             # and available via get_download_failures()
             pass # logger.warning(f"Failed to download PDF from {url}. See failure list for details.")    
-
+    logger.info(f"Successful downloads: {successful_downloads} / {total_entries - len(errs)} Failed to resolve {len(errs)} dois.")
 
 async def async_get_pdf_links_from_urls(url: Union[str, bytes, None], proxy) -> str:
     if url is None:
@@ -101,7 +116,7 @@ async def async_get_pdf_links_from_urls(url: Union[str, bytes, None], proxy) -> 
     try:
         pdfurl = m.group(1)
     except (AttributeError, IndexError):
-        logger.warningg(f"No pdf link found in {url}")
+        # logger.warning(f"No pdf link found in {url}")
         pdfurl = ''
 
     return pdfurl
