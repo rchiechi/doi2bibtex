@@ -152,7 +152,7 @@ async def download_pdfs(
     proxy: Optional[str] = None,
     concurrent_downloads: int = 5,
     request_timeout: float = 45.0,
-    num_retries: int = 3
+    num_retries: int = 6
 ) -> Dict[str, Union[bytes, None]]:
     """
     Asynchronously downloads multiple PDFs from a list of URLs.
