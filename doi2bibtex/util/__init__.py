@@ -7,6 +7,7 @@ from .abbreviso import local_iso4
 from .LaTexAccents import AccentConverter
 from .encode import LatexEncoder
 from .spinner import Spinner
+from .pdfdownloader import download_pdfs
 
 # def doitobibtex(doi):
 #     return get_bibtex_from_url(doi)
@@ -34,3 +35,6 @@ def latexAccentConverter():
 
 def unicodeTolatex():
     return LatexEncoder()
+
+def downloadPDFs(urls, proxy, **kwargs):
+    return download_pdfs(urls=urls, proxy=proxy, **kwargs)

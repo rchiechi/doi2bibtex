@@ -102,6 +102,18 @@ subparser_clipboard.add_argument('--stdout', action='store_true', default=False,
 subparser_clipboard.add_argument('--noclean', action='store_true', default=False,
                                  help='Do not convert unicode to LaTeX.')
 
+# # #  Clipboard subparser options # # #
+subparser_pdf = subparsers.add_parser('pdf', help='Download a PDF from a doi.')
+
+subparser_pdf.add_argument('more_dois', type=str, nargs='*', default=[],
+                                 help='Additional DOIs supplied on the command line.')
+subparser_pdf.add_argument('--proxy', type=str, default="http://localhost:3128",
+                                 help='Proxy server to use.')
+subparser_pdf.add_argument('--mirror', type=str, default="https://sci-hub.se",
+                                  help='Mirror to use to resolve PDFs.')
+subparser_pdf.add_argument('--filename', type=str,
+                                 help='Base filename (defaults to doi).')
+
 # # #  Textfile subparser options # # #
 subparser_textfile = subparsers.add_parser('textfile', help='Write output to a standard text file.')
 

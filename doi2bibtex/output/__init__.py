@@ -4,3 +4,4 @@ from .textfile import do_textfile as textfile
 from .list import do_html as html
 from .list import do_markdown as markdown
 from .list import do_textlist as textlist
+from .pdf import do_pdfs as pdf
