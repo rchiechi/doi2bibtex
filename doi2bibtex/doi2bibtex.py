@@ -102,17 +102,17 @@ async def async_main():
             except IndexError:
                 logger.warning(f"Error adding doi: {doi}")
     
-    if len(dois) < 10:
-        async with util.Spinner("Resolving: ") as spinner:
-            tasks = [asyncio.create_task(process_doi(doi)) for doi in set(dois)]
-            pending = set(tasks)
-            while pending:
-                done, pending = await asyncio.wait(pending, timeout=0.1, return_when=asyncio.FIRST_COMPLETED)
-                await spinner.update()
-    else:
-        tasks = [process_doi(doi) for doi in set(dois)]
-        # Buffer log messages during the progress bar to avoid interleaving
-        with _buffer_logs():
+    with _buffer_logs():
+        if len(dois) < 10:
+            async with util.Spinner("Resolving: ") as spinner:
+                tasks = [asyncio.create_task(process_doi(doi)) for doi in set(dois)]
+                pending = set(tasks)
+                while pending:
+                    done, pending = await asyncio.wait(pending, timeout=0.1, return_when=asyncio.FIRST_COMPLETED)
+                    await spinner.update()
+        else:
+            tasks = [process_doi(doi) for doi in set(dois)]
+            # Buffer log messages during the progress bar to avoid interleaving
             await tqdm_asyncio.gather(*tasks, desc="Processing dois", colour='blue', unit='bib')
     if added:
         print(f"{Fore.CYAN}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")

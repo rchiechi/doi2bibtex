@@ -112,7 +112,8 @@ async def async_get_pdf_links_from_urls(url: Union[str, bytes, None], proxy) -> 
     # Custom headers to mimic a browser; can sometimes help bypass simple bot detection
     # and ensure servers provide appropriate content.
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
+        "User-Agent": util.get_user_agent(),
+        # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
         # "Accept": "application/pdf,application/octet-stream,*/*;q=0.8", # Prioritize PDF
         # "Accept-Language": "en-US,en;q=0.9",
         "Connection": "keep-alive",
