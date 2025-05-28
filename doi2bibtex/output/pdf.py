@@ -5,11 +5,35 @@ import doi2bibtex.util as util
 from typing import List, Optional, Union, Tuple, Dict
 import asyncio
 import random
+import logging
 from tqdm.asyncio import tqdm
+from contextlib import contextmanager
 
 PDFURL = re.compile(r'//(.*\.pdf\?download=true)')
 
 logger = util.getlogger(__name__)
+
+@contextmanager
+def _buffer_logs():
+    """Temporarily buffer all 'doi2bib' logger output and flush after context."""
+    root_logger = logging.getLogger('doi2bib')
+    orig_handlers = root_logger.handlers[:]
+    buf_records = []
+    class BufferHandler(logging.Handler):
+        def emit(self, record):
+            buf_records.append(record)
+    buf_handler = BufferHandler()
+    # Replace handlers with buffer
+    root_logger.handlers = [buf_handler]
+    try:
+        yield
+    finally:
+        # Flush buffered records
+        for rec in buf_records:
+            for h in orig_handlers:
+                h.handle(rec)
+        # Restore original handlers
+        root_logger.handlers = orig_handlers
 
 async def do_pdfs(library, args):
     proxy = args.proxy
@@ -25,18 +49,19 @@ async def do_pdfs(library, args):
     baseurl = args.mirror.strip('/')
     urls = {}
     errs = []
-    for entry in tqdm(library.entries, desc="Resolving pdf links", total=total_entries, unit="doi"):
-    # for entry in library.entries:
-        doi = _finddoi(entry)
-        if not doi:
-            errs.append(entry)
-            continue
-        url = await async_get_pdf_links_from_urls(f"{baseurl}/{doi}", args.proxy)
-        if url:
-            urls[doi] = f"https://{url}"
-        else:
-            errs.append(doi)
-        await asyncio.sleep(10 + (random.random() * 0.5))
+    with _buffer_logs():
+        for entry in tqdm(library.entries, desc="Resolving pdf links", total=total_entries, unit="doi"):
+        # for entry in library.entries:
+            doi = _finddoi(entry)
+            if not doi:
+                errs.append(entry)
+                continue
+            url = await async_get_pdf_links_from_urls(f"{baseurl}/{doi}", args.proxy)
+            if url:
+                urls[doi] = f"https://{url}"
+            else:
+                errs.append(doi)
+            await asyncio.sleep(10 + (random.random() * 0.5))
     logger.debug(f"Processing {urls}")
     if errs:
         logger.warning(f"Could not get pdf links from {errs}.")
@@ -47,14 +72,14 @@ async def do_pdfs(library, args):
         if args.filename:
             pdfpath = Path(Path(args.filename).with_suffix('.pdf'))
         else:
-            pdfpath = Path(Path(doi.replace('/', '_')).with_suffix('.pdf'))
+            pdfpath = Path(doi.replace('/', '_')+'.pdf')
         i = 0
-        while pdfpath.exists():
-            pdfpath = Path(Path(f"{pdfpath.name}_{i:02d}").with_suffix('.pdf'))
+        while any([pdfpath.exists(), pdfpath in pdfurls.values()]):
+            pdfpath = Path(f"{pdfpath.name}_{i:02d}"+'.pdf')
         pdfurls[url] = pdfpath
    
     downloaded_pdfs = await util.downloadPDFs(list(pdfurls.keys()), proxy)
-    
+    failed = []
     successful_downloads = 0
     for url, pdf_data in downloaded_pdfs.items():
         if pdf_data:
@@ -64,7 +89,7 @@ async def do_pdfs(library, args):
             try:
                 with pdfpath.open("wb") as f:
                     f.write(pdf_data)
-                logger.info(f"Saved PDF from {url} to {pdfpath}")
+                logger.info(f"Saved PDF to {pdfpath}")
             except IOError as e:
                 logger.error(f"Failed to save PDF from {url}: {e}")
             except Exception as e:
@@ -72,9 +97,11 @@ async def do_pdfs(library, args):
         else:
             # Failure details are already logged by the download functions
             # and available via get_download_failures()
+            failed.append(ur)
             pass # logger.warning(f"Failed to download PDF from {url}. See failure list for details.")    
     if errs:
         logger.warning(f"Successful downloads: {successful_downloads} / {total_entries - len(errs)} Failed to resolve {len(errs)} dois.")
+        logger.warning(f"Failed urls: {failed}")
 
 async def async_get_pdf_links_from_urls(url: Union[str, bytes, None], proxy) -> str:
     if url is None:

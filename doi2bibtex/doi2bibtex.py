@@ -113,7 +113,7 @@ async def async_main():
         tasks = [process_doi(doi) for doi in set(dois)]
         # Buffer log messages during the progress bar to avoid interleaving
         with _buffer_logs():
-            await tqdm_asyncio.gather(*tasks, colour='blue', unit='bib')
+            await tqdm_asyncio.gather(*tasks, desc="Processing dois", colour='blue', unit='bib')
     if added:
         print(f"{Fore.CYAN}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
     # Summarize any OpenAlex fetch failures

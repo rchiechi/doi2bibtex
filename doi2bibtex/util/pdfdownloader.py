@@ -2,6 +2,8 @@ import httpx
 import asyncio
 import logging
 import random
+from tqdm.asyncio import tqdm_asyncio
+from contextlib import contextmanager
 from typing import List, Optional, Union, Tuple, Dict
 from .getlogger import return_logger as getlogger
 
@@ -9,6 +11,28 @@ logger = getlogger(__name__)
 
 # Global list to store information about failed downloads
 download_failures: List[Tuple[str, str]] = []
+
+@contextmanager
+def _buffer_logs():
+    """Temporarily buffer all 'doi2bib' logger output and flush after context."""
+    # root_logger = logging.getLogger('doi2bib')
+    orig_handlers = logger.handlers[:]
+    buf_records = []
+    class BufferHandler(logging.Handler):
+        def emit(self, record):
+            buf_records.append(record)
+    buf_handler = BufferHandler()
+    # Replace handlers with buffer
+    logger.handlers = [buf_handler]
+    try:
+        yield
+    finally:
+        # Flush buffered records
+        for rec in buf_records:
+            for h in orig_handlers:
+                h.handle(rec)
+        # Restore original handlers
+        logger.handlers = orig_handlers
 
 def get_download_failures() -> List[Tuple[str, str]]:
     """
@@ -121,7 +145,7 @@ async def download_pdf_from_url(
                 continue
             else:
                 full_msg = f"{error_message} fetching {url} after {retries} attempts."
-                logger.error(full_msg)
+                logger.debug(full_msg)
                 download_failures.append((url, full_msg))
                 return None
         except Exception as e:  # Catch any other unexpected errors during the process
@@ -173,23 +197,12 @@ async def download_pdfs(
     download_failures.clear()  # Clear failures from any previous run
     results: Dict[str, Union[bytes, None]] = {}
     
-    # Configure proxies for httpx.AsyncClient
-    # Proxies can be a single string or a dictionary mapping schemes.
-    # Example: proxies = "http://localhost:8888"
-    # Or: proxies = {"http://": "http://localhost:8080", "https://": "http://localhost:8080"}
-    # proxies_config: Union[str, Dict[str, str], None] = None
     if proxy:
         if not proxy.startswith("http://") or proxy.startswith("https://"):
              # If proxy explicitly mentions scheme, use it for both http and https for simplicity,
              # or httpx will choose based on URL. For more control, use dict.
             logger.warning(f"Assuming {proxy} is an http:// proxy.")
             proxy = f"http://{proxy}"
-        # else:
-        #     # Assuming a simple host:port proxy, prefix with http://
-        #     # This is a basic assumption; robust proxy parsing might be needed for complex cases.
-        #     logger.warning(f"Proxy string '{proxy}' does not specify a scheme, assuming 'http://{proxy}' for all protocols.")
-        #     proxies_config = {"all://": f"http://{proxy}"}
-
 
     # Use an asyncio.Semaphore to limit the number of concurrent downloads
     semaphore = asyncio.Semaphore(concurrent_downloads)
@@ -227,7 +240,12 @@ async def download_pdfs(
         # Wait for all download tasks to complete
         # return_exceptions=True would return exceptions as results instead of raising them.
         # Here, exceptions are handled within download_pdf_from_url.
-        downloaded_contents = await asyncio.gather(*tasks, return_exceptions=False)
+        
+        # Buffer log messages during the progress bar to avoid interleaving
+        with _buffer_logs():
+            downloaded_contents =  await tqdm_asyncio.gather(*tasks, desc="Downloading pdfs", colour='magenta', unit='pdf')
+        
+        # downloaded_contents = await asyncio.gather(*tasks, return_exceptions=False)
 
         for url, content in zip(urls, downloaded_contents):
             results[url] = content
