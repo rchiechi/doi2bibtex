@@ -85,7 +85,7 @@ async def async_main():
             return
         #print(f'{Style.BRIGHT}*', end=Style.RESET_ALL)
         async with throttler:
-            result = await util.async_get_bibtex_from_url(doi)
+            result = await bibtex.async_get_bibtex_from_url(doi)
         if result:
             try:
                 _entry = bibtex.read(result).entries[0]

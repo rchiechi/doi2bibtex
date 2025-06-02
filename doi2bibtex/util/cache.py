@@ -5,7 +5,7 @@ import tempfile
 import pickle
 import urllib.request
 from urllib.error import HTTPError
-from .getlogger import return_logger
+from .getdoilogger import return_logger
 
 logger = return_logger(__name__)
 

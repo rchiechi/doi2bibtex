@@ -2,7 +2,7 @@ import urllib.parse
 import urllib.request
 from urllib.error import HTTPError
 from iso4 import abbreviate
-from .getlogger import return_logger
+from .getdoilogger import return_logger
 
 BASE_URL = 'https://abbreviso.toolforge.org/abbreviso/a'
 

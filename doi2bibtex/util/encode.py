@@ -1,6 +1,6 @@
 import os
 from pylatexenc.latexencode import UnicodeToLatexEncoder
-from .getlogger import return_logger
+from .getdoilogger import return_logger
 
 logger = return_logger(__name__)
 

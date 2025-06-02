@@ -75,7 +75,7 @@ async def doi2bib():
         if not doi:
             return
         async with throttler:
-            result = await util.async_get_bibtex_from_url(doi)
+            result = await bibtex.async_get_bibtex_from_url(doi)
         if result: 
             library.add(bibtex.read(result).entries[0])
     tasks = [process_doi(doi) for doi in set(dois)]
@@ -124,7 +124,7 @@ async def upload_file():
         if not doi:
             return
         async with throttler:
-            result = await util.async_get_bibtex_from_url(doi)
+            result = await bibtex.async_get_bibtex_from_url(doi)
         if result: 
             library.add(bibtex.read(result).entries[0])
     tasks = [process_doi(doi) for doi in set(dois)]

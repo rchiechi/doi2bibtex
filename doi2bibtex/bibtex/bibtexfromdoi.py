@@ -5,8 +5,8 @@ import asyncio
 import re
 from typing import Union
 import httpx
-from .getlogger import return_logger
-from doi2bibtex.bibtex import get_metadata_from_dois
+from doi2bibtex.util.getdoilogger import return_logger
+from .openalex import get_metadata_from_dois
 from colorama import Fore, Style
 from json import JSONDecodeError
 
@@ -14,6 +14,7 @@ BASE_URL = 'https://dx.doi.org/'
 PAGERES = (re.compile(r'^\d+\.\d+/\D+\.20(\d+)$'),
            re.compile(r'^\d+\.\d+/\D+(\d+)$'),
            re.compile(r'^\d+\.\d+/\D+\.\d+\.(\d+)$'))
+
 logger = return_logger(__name__)
 
 
@@ -56,7 +57,7 @@ async def add_pages(bibtex, doi):
     if isinstance(doi, bytes):
         doi = str(doi, encoding='utf-8')
     
-    metadata = await async_get_metadata_from_dois([doi])
+    metadata = await get_metadata_from_dois([doi])
     page_info = extract_page_info_from_aleks(list(metadata.values())[0])
     
     if page_info['first_page']:

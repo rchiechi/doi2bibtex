@@ -1,7 +1,7 @@
 import os
 import re
 import mmap
-from .getlogger import return_logger
+from .getdoilogger import return_logger
 
 # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
 

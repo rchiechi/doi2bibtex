@@ -5,7 +5,7 @@ import random
 from tqdm.asyncio import tqdm_asyncio
 from contextlib import contextmanager
 from typing import List, Optional, Union, Tuple, Dict
-from .getlogger import return_logger as getlogger
+from .getdoilogger import return_logger as getlogger
 
 logger = getlogger(__name__)
 

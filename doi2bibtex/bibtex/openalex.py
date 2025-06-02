@@ -8,12 +8,12 @@ from urllib.parse import urlencode
 import httpx
 import random
 from asyncio_throttle import Throttler
-from doi2bibtex.util.getlogger import return_logger
+from doi2bibtex.util.getdoilogger import return_logger as getlogger
 from colorama import Fore, Style
 
 BASE_URL = 'https://api.openalex.org/works'
 
-logger = return_logger(__name__)
+logger = getlogger(__name__)
 
 throttler = Throttler(rate_limit=10, period=1)  # 10 requests per second (OpenAlex limit)
 
@@ -282,8 +282,7 @@ def get_metadata_from_dois(dois: List[str]) -> dict:
     Returns:
         Dictionary mapping DOIs to their metadata dictionaries
     """
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(async_get_metadata_from_dois(dois))
+    return async_get_metadata_from_dois(dois)
 
 
 '''

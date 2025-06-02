@@ -5,9 +5,11 @@ from bibtexparser.model import Entry, Field
 from colorama import Fore, Style
 from titlecase import titlecase
 from colorama import Fore,Style
-from doi2bibtex.util import getlogger, getISO4, async_get_bibtex_from_url
+from doi2bibtex.util import getISO4
+from .bibtexfromdoi import async_get_bibtex_from_url
+from doi2bibtex.util.getdoilogger import return_logger
 
-logger = getlogger(__name__)
+logger = return_logger(__name__)
 
 async def get_pages(doi):
     page = ''
