@@ -75,7 +75,8 @@ async def async_main():
     dois_in_library = bibtex.listKeyinLibrary(library, 'doi')
     citekeys_in_library = bibtex.listCitekeys(library, lower=True)
     incr = 1
-    throttler = Throttler(rate_limit=5, period=1)
+    doi_throttler = Throttler(rate_limit=5, period=1)
+    alex_throttler = Throttler(rate_limit=3, period=1)
     async def process_doi(doi):
         nonlocal added
         nonlocal incr
@@ -86,8 +87,10 @@ async def async_main():
             # print(f'{Fore.RED}{Style.BRIGHT}!', end=Style.RESET_ALL)
             return
         #print(f'{Style.BRIGHT}*', end=Style.RESET_ALL)
-        async with throttler:
-            result = await bibtex.async_get_bibtex_from_url(doi)
+        async with alex_throttler:
+            metadata = await bibtex.async_get_metadata_from_doi(doi)
+        async with doi_throttler:
+            result = await bibtex.async_get_bibtex_from_url(doi, metadata)
         if result:
             try:
                 _entry = bibtex.read(result).entries[0]

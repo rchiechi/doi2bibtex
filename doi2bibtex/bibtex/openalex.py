@@ -4,6 +4,7 @@ import http
 import asyncio
 import json
 from typing import List
+import traceback
 from urllib.parse import urlencode
 import httpx
 import random
@@ -23,7 +24,7 @@ def get_failures():
     """Return list of failed OpenAlex fetches as (url, error_message) tuples."""
     return failures
 
-async def async_get_work_by(id, **kwargs):
+async def async_get_works_by(id, **kwargs):
     if isinstance(id, bytes):
         id = str(id, encoding='utf-8')
     if kwargs.get('doi', False):
@@ -122,13 +123,13 @@ async def async_get_cited(dois: List[str]) -> List[str]:
         if not doi:
             return
         async with throttler:
-            works = await async_get_work_by(doi, select='referenced_works', doi=True)
+            works = await async_get_works_by(doi, select='referenced_works', doi=True)
         if works:
             for work in works:
                 ids = work.get('referenced_works', [])
                 for id in ids:
                     async with throttler:
-                        _doid = await async_get_work_by(id.replace('https://openalex.org/', ''), select='doi')
+                        _doid = await async_get_works_by(id.replace('https://openalex.org/', ''), select='doi')
                     if _doid and _doid[0].get('doi'):
                         _doi = _doid[0]['doi'].replace('https://doi.org/', '')
                         if _doi:
@@ -149,11 +150,11 @@ async def async_get_citing(dois: List[str]) -> List[str]:
         if not doi:
             return
         async with throttler:
-            _id = await async_get_work_by(doi, select='id', doi=True)
+            _id = await async_get_works_by(doi, select='id', doi=True)
         if _id:
             id = _id[0].get('id', '').replace('https://openalex.org/', '')
             async with throttler:
-                citing_works = await async_get_work_by(id, select='doi', cites=True)
+                citing_works = await async_get_works_by(id, select='doi', cites=True)
             results.append(citing_works)
 
     tasks = [fetch_doi(doi) for doi in dois]
@@ -170,6 +171,59 @@ async def async_get_citing(dois: List[str]) -> List[str]:
 
     return dois + _dois
 
+def worktometadata(work, doi=''):
+    metadata = {
+    'doi': doi,
+    'title': work.get('title'),
+    'abstract': _reconstruct_abstract(work.get('abstract_inverted_index', {})),
+    'publication_date': work.get('publication_date'),
+    'publication_year': work.get('publication_year'),
+    'type': work.get('type'),
+    'language': work.get('language'),
+    'primary_location': work.get('primary_location', {}),
+    'open_access': work.get('open_access', {}),
+    'authorships': [{
+        'author_position': auth.get('author_position'),
+        'author': auth.get('author', {}),
+        'institutions': auth.get('institutions', []),
+        'raw_author_name': auth.get('raw_author_name'),
+        'raw_affiliation_strings': auth.get('raw_affiliation_strings', [])
+    } for auth in work.get('authorships', [])],
+    'cited_by_count': work.get('cited_by_count'),
+    'biblio': work.get('biblio', {}),
+    'is_retracted': work.get('is_retracted'),
+    'is_paratext': work.get('is_paratext'),
+    'concepts': work.get('concepts', []),
+    'mesh': work.get('mesh', []),
+    'keywords': work.get('keywords', []),
+    'grants': work.get('grants', []),
+    'referenced_works_count': work.get('referenced_works_count'),
+    'related_works': work.get('related_works', []),
+    'sustainable_development_goals': work.get('sustainable_development_goals', []),
+    'openalex_id': work.get('id'),
+    'openalex_url': f"https://openalex.org/{work.get('id', '').split('/')[-1]}"
+    }
+    return metadata
+
+async def async_get_metadata_from_doi(doi):
+    metadata = {}
+    try:
+        # Fetch full work data (no select parameter means all fields)
+        works = await async_get_works_by(doi, doi=True)
+        
+        if works and len(works) > 0:
+            work = works[0]
+            # Extract relevant metadata
+            metadata = worktometadata(work, doi)
+        else:
+            logger.warning(f"No metadata found for DOI: {doi}")            
+    except Exception as e:
+        logger.debug(f"Error fetching metadata for DOI {doi}: {e}")
+        # stack_trace_str = traceback.format_exc()
+        # print(stack_trace_str)
+    finally:
+        return metadata
+                
 async def async_get_metadata_from_dois(dois: List[str]) -> dict:
     """
     Fetch metadata including abstracts for a list of DOIs from OpenAlex.
@@ -189,43 +243,13 @@ async def async_get_metadata_from_dois(dois: List[str]) -> dict:
         async with throttler:
             try:
                 # Fetch full work data (no select parameter means all fields)
-                works = await async_get_work_by(doi, doi=True)
+                works = await async_get_works_by(doi, doi=True)
                 
                 if works and len(works) > 0:
                     work = works[0]
                     
                     # Extract relevant metadata
-                    metadata = {
-                        'doi': doi,
-                        'title': work.get('title'),
-                        'abstract': _reconstruct_abstract(work.get('abstract_inverted_index', {})),
-                        'publication_date': work.get('publication_date'),
-                        'publication_year': work.get('publication_year'),
-                        'type': work.get('type'),
-                        'language': work.get('language'),
-                        'primary_location': work.get('primary_location', {}),
-                        'open_access': work.get('open_access', {}),
-                        'authorships': [{
-                            'author_position': auth.get('author_position'),
-                            'author': auth.get('author', {}),
-                            'institutions': auth.get('institutions', []),
-                            'raw_author_name': auth.get('raw_author_name'),
-                            'raw_affiliation_strings': auth.get('raw_affiliation_strings', [])
-                        } for auth in work.get('authorships', [])],
-                        'cited_by_count': work.get('cited_by_count'),
-                        'biblio': work.get('biblio', {}),
-                        'is_retracted': work.get('is_retracted'),
-                        'is_paratext': work.get('is_paratext'),
-                        'concepts': work.get('concepts', []),
-                        'mesh': work.get('mesh', []),
-                        'keywords': work.get('keywords', []),
-                        'grants': work.get('grants', []),
-                        'referenced_works_count': work.get('referenced_works_count'),
-                        'related_works': work.get('related_works', []),
-                        'sustainable_development_goals': work.get('sustainable_development_goals', []),
-                        'openalex_id': work.get('id'),
-                        'openalex_url': f"https://openalex.org/{work.get('id', '').split('/')[-1]}"
-                    }
+                    metadata = worktometadata(work)
                     
                     metadata_dict[doi] = metadata
                 else:
@@ -233,7 +257,7 @@ async def async_get_metadata_from_dois(dois: List[str]) -> dict:
                     metadata_dict[doi] = None
                     
             except Exception as e:
-                logger.error(f"Error fetching metadata for DOI {doi}: {e}")
+                logger.error(f"Exception fetching metadata for DOI {doi}: {e}")
                 metadata_dict[doi] = None
     
     # Create tasks for all DOIs

@@ -6,7 +6,7 @@ import re
 from typing import Union
 import httpx
 from doi2bibtex.util.getdoilogger import return_logger
-from .openalex import async_get_metadata_from_dois
+from .openalex import async_get_metadata_from_doi
 from colorama import Fore, Style
 from json import JSONDecodeError
 
@@ -18,7 +18,7 @@ PAGERES = (re.compile(r'^\d+\.\d+/\D+\.20(\d+)$'),
 logger = return_logger(__name__)
 
 
-async def async_get_bibtex_from_url(doi: Union[str, bytes, None], metadata=None) -> str:
+async def async_get_bibtex_from_url(doi: Union[str, bytes, None], metadata={}) -> str:
     if doi is None:
         return ''
     if isinstance(doi, bytes):
@@ -47,15 +47,16 @@ async def async_get_bibtex_from_url(doi: Union[str, bytes, None], metadata=None)
         except httpx.ConnectError as err:
             logger.error(f"Connection error fetching {url}: {err}")
     
-    if not metadata:
-        metadata = await async_get_metadata_from_dois([doi])
+    # if not metadata:
+    #     metadata = await async_get_metadata_from_doi(doi)
     
-    abstract = list(metadata.values())[0].get('abstract', '')
+    abstract = metadata.get('abstract', '')
     if abstract:
         _biblist = bibtex.split(',')
         _biblist.insert(-1, 'abstract={%s}' % abstract)
         bibtex = ','.join(_biblist)
-        print(bibtex)
+    else:
+        logger.warning(f"No abstract found for {doi}")
         
     if 'pages' not in bibtex.lower():
         bibtex = await add_pages(bibtex, doi, metadata)
@@ -70,11 +71,11 @@ async def add_pages(bibtex, doi, metadata):
         doi = str(doi, encoding='utf-8')
     
     # metadata = await async_get_metadata_from_dois([doi])
-    page_info = extract_page_info_from_aleks(list(metadata.values())[0])
+    page_info = extract_page_info_from_aleks(metadata)
     
     if page_info['first_page']:
         page = page_info['first_page']
-    
+    key = 'alex'
     if not page:
         url = BASE_URL + doi
         json_bib = {}
@@ -106,7 +107,7 @@ async def add_pages(bibtex, doi, metadata):
     if page:
         logger.info(f"{Fore.YELLOW}page={page} from {key}{Style.RESET_ALL}")
         _biblist = bibtex.split(',')
-        _biblist.insert(-1, f'pages={page}')
+        _biblist.insert(-1, 'pages={%s}' % page)
         return ','.join(_biblist)
 
     return guess_pages(bibtex, doi)

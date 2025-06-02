@@ -14,13 +14,18 @@ layers = [
 
 def load_bib(bibtex, dedupe=False):
     logger.debug(f"Loading bib with dedupe={dedupe}")
-    if os.path.exists(bibtex):
-        library = bibtexparser.parse_file(bibtex, append_middleware=layers)
-    else:
-        library = bibtexparser.parse_string(bibtex, append_middleware=layers)
-    if dedupe:
-        return dedupe_bib_library(library)
-    return library
+    library = bibtexparser.parse_string('')
+    try:
+        if os.path.exists(bibtex):
+            library = bibtexparser.parse_file(bibtex, append_middleware=layers)
+        else:
+            library = bibtexparser.parse_string(bibtex, append_middleware=layers)
+        if dedupe:
+            return dedupe_bib_library(library)
+    except Exception as e:
+        logger.error(e)
+    finally:
+        return library
 
 def getkeys(library, key, lower=True):
     keys = []
