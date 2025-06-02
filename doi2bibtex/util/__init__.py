@@ -8,6 +8,7 @@ from .encode import LatexEncoder
 from .spinner import Spinner
 from .pdfdownloader import download_pdfs
 from .web import get_user_agent
+from .validate import validate_and_fix_bibtex
 
 # def doitobibtex(doi):
 #     return get_bibtex_from_url(doi)

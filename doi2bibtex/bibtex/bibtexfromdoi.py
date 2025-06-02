@@ -6,6 +6,7 @@ import re
 from typing import Union
 import httpx
 from doi2bibtex.util.getdoilogger import return_logger
+from doi2bibtex.util import validate_and_fix_bibtex
 from .openalex import async_get_metadata_from_doi
 from colorama import Fore, Style
 from json import JSONDecodeError
@@ -47,19 +48,18 @@ async def async_get_bibtex_from_url(doi: Union[str, bytes, None], metadata={}) -
         except httpx.ConnectError as err:
             logger.error(f"Connection error fetching {url}: {err}")
     
-    # if not metadata:
-    #     metadata = await async_get_metadata_from_doi(doi)
-    
     abstract = metadata.get('abstract', '')
     if abstract:
         _biblist = bibtex.split(',')
         _biblist.insert(-1, 'abstract={%s}' % abstract)
         bibtex = ','.join(_biblist)
     else:
-        logger.warning(f"No abstract found for {doi}")
+        logger.debug(f"No abstract found for {doi}")
         
     if 'pages' not in bibtex.lower():
         bibtex = await add_pages(bibtex, doi, metadata)
+    
+    # bibtex = validate_and_fix_bibtex(bibtex)
     
     return bibtex
 
