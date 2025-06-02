@@ -69,6 +69,8 @@ async def async_main():
     if args.citing:
         dois = await bibtex.async_get_citing(dois)
     
+   
+    
     added = 0
     dois_in_library = bibtex.listKeyinLibrary(library, 'doi')
     citekeys_in_library = bibtex.listCitekeys(library, lower=True)
@@ -102,7 +104,7 @@ async def async_main():
             except IndexError:
                 logger.warning(f"Error adding doi: {doi}")
     
-    with _buffer_logs():
+    with _buffer_logs():        
         if len(dois) < 10:
             async with util.Spinner("Resolving: ") as spinner:
                 tasks = [asyncio.create_task(process_doi(doi)) for doi in set(dois)]
