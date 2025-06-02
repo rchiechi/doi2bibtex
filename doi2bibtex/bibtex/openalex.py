@@ -170,3 +170,135 @@ async def async_get_citing(dois: List[str]) -> List[str]:
 
     return dois + _dois
 
+async def async_get_metadata_from_dois(dois: List[str]) -> dict:
+    """
+    Fetch metadata including abstracts for a list of DOIs from OpenAlex.
+    
+    Args:
+        dois: List of DOI strings (without https://doi.org/ prefix)
+        
+    Returns:
+        Dictionary mapping DOIs to their metadata dictionaries
+    """
+    metadata_dict = {}
+    
+    async def fetch_doi_metadata(doi):
+        if not doi:
+            return
+            
+        async with throttler:
+            try:
+                # Fetch full work data (no select parameter means all fields)
+                works = await async_get_work_by(doi, doi=True)
+                
+                if works and len(works) > 0:
+                    work = works[0]
+                    
+                    # Extract relevant metadata
+                    metadata = {
+                        'doi': doi,
+                        'title': work.get('title'),
+                        'abstract': _reconstruct_abstract(work.get('abstract_inverted_index', {})),
+                        'publication_date': work.get('publication_date'),
+                        'publication_year': work.get('publication_year'),
+                        'type': work.get('type'),
+                        'language': work.get('language'),
+                        'primary_location': work.get('primary_location', {}),
+                        'open_access': work.get('open_access', {}),
+                        'authorships': [{
+                            'author_position': auth.get('author_position'),
+                            'author': auth.get('author', {}),
+                            'institutions': auth.get('institutions', []),
+                            'raw_author_name': auth.get('raw_author_name'),
+                            'raw_affiliation_strings': auth.get('raw_affiliation_strings', [])
+                        } for auth in work.get('authorships', [])],
+                        'cited_by_count': work.get('cited_by_count'),
+                        'biblio': work.get('biblio', {}),
+                        'is_retracted': work.get('is_retracted'),
+                        'is_paratext': work.get('is_paratext'),
+                        'concepts': work.get('concepts', []),
+                        'mesh': work.get('mesh', []),
+                        'keywords': work.get('keywords', []),
+                        'grants': work.get('grants', []),
+                        'referenced_works_count': work.get('referenced_works_count'),
+                        'related_works': work.get('related_works', []),
+                        'sustainable_development_goals': work.get('sustainable_development_goals', []),
+                        'openalex_id': work.get('id'),
+                        'openalex_url': f"https://openalex.org/{work.get('id', '').split('/')[-1]}"
+                    }
+                    
+                    metadata_dict[doi] = metadata
+                else:
+                    logger.warning(f"No metadata found for DOI: {doi}")
+                    metadata_dict[doi] = None
+                    
+            except Exception as e:
+                logger.error(f"Error fetching metadata for DOI {doi}: {e}")
+                metadata_dict[doi] = None
+    
+    # Create tasks for all DOIs
+    tasks = [fetch_doi_metadata(doi) for doi in dois]
+    
+    # Execute all tasks concurrently
+    await asyncio.gather(*tasks)
+    
+    return metadata_dict
+
+
+def _reconstruct_abstract(inverted_index: dict) -> str:
+    """
+    Reconstruct abstract text from OpenAlex inverted index format.
+    
+    Args:
+        inverted_index: Dictionary mapping words to their positions in the abstract
+        
+    Returns:
+        Reconstructed abstract text
+    """
+    if not inverted_index:
+        return ""
+    
+    # Create a list of (position, word) tuples
+    word_positions = []
+    for word, positions in inverted_index.items():
+        for pos in positions:
+            word_positions.append((pos, word))
+    
+    # Sort by position
+    word_positions.sort(key=lambda x: x[0])
+    
+    # Join words to form the abstract
+    return " ".join(word for _, word in word_positions)
+
+
+# Convenience synchronous wrapper
+def get_metadata_from_dois(dois: List[str]) -> dict:
+    """
+    Synchronous wrapper for async_get_metadata_from_dois.
+    
+    Args:
+        dois: List of DOI strings (without https://doi.org/ prefix)
+        
+    Returns:
+        Dictionary mapping DOIs to their metadata dictionaries
+    """
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(async_get_metadata_from_dois(dois))
+
+
+'''
+# Async usage
+dois = ["10.1038/nature12373", "10.1126/science.1259855"]
+metadata = await async_get_metadata_from_dois(dois)
+
+# Synchronous usage
+metadata = get_metadata_from_dois(dois)
+
+# Access metadata
+for doi, data in metadata.items():
+    if data:
+        print(f"Title: {data['title']}")
+        print(f"Abstract: {data['abstract']}")
+        print(f"Authors: {len(data['authorships'])} authors")
+'''
+
