@@ -68,17 +68,11 @@ def dedupe_bib_library(library, use_llm=False, llm_model=None):
                 candidate_key = (year, journal[:5].lower())
                 candidate_groups[candidate_key].append(entry.key)
         
-        processed_pairs = set()
-        llm_dupe_keys = []
+        llm_dupe_pairs = []
         for group in candidate_groups.values():
             if len(group) < 2:
                 continue
             for key1, key2 in combinations(group, 2):
-                pair = tuple(sorted((key1, key2)))
-                if pair in processed_pairs:
-                    continue
-                processed_pairs.add(pair)
-
                 entry1 = library.entries_dict[key1]
                 entry2 = library.entries_dict[key2]
 
@@ -90,13 +84,28 @@ def dedupe_bib_library(library, use_llm=False, llm_model=None):
                     title2 = title2_field.value
                     if ratio(title1, title2) > 0.8:
                         if _get_llm_verdict(llm_provider, entry1, entry2):
-                            llm_dupe_keys.append(key1)
-                            llm_dupe_keys.append(key2)
+                            llm_dupe_pairs.append((key1, key2))
         
-        if llm_dupe_keys:
-            # This is a simplified grouping. A more robust implementation
-            # would create distinct groups of duplicates.
-            dupe_groups.append(list(set(llm_dupe_keys)))
+        # Find connected components to group the duplicates correctly
+        adj = defaultdict(list)
+        for u, v in llm_dupe_pairs:
+            adj[u].append(v)
+            adj[v].append(u)
+
+        visited = set()
+        for key in adj:
+            if key not in visited:
+                component = []
+                q = [key]
+                visited.add(key)
+                while q:
+                    curr = q.pop(0)
+                    component.append(curr)
+                    for neighbor in adj[curr]:
+                        if neighbor not in visited:
+                            visited.add(neighbor)
+                            q.append(neighbor)
+                dupe_groups.append(component)
 
     else:
         # Standard, non-LLM deduplication
@@ -129,7 +138,7 @@ def dedupe_bib_library(library, use_llm=False, llm_model=None):
                 continue
             dupe_candidates[dupe_key].append(_key)
         
-        dupe_groups = [keys for keys in dupe_candidates.values() if len(keys) > 1]
+        dupe_groups.extend([keys for keys in dupe_candidates.values() if len(keys) > 1])
 
     if dupe_groups:
         return dodedupe(library, dupe_groups)
