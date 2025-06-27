@@ -34,7 +34,9 @@ def check_tex_cites(tex_files, bib_database, use_llm=False):
     
     # Create a temporary library with only the cited entries
     cited_library = load_bib('')
-    cited_library.entries = [entry for entry in bib_library.entries if entry.key in all_cite_keys]
+    for entry in bib_library.entries:
+        if entry.key in all_cite_keys:
+            cited_library.add(entry)
     
     print("Checking for duplicate entries in the cited library...")
     # This function now needs to be adapted to return the dupe groups
