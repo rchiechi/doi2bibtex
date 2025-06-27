@@ -57,6 +57,8 @@ subparser_bibtexdb.add_argument('--clean', action='store_true', default=False,
                                 help="Clean bibtex db entries (implies dedupe).")
 subparser_bibtexdb.add_argument('--dedupe', action='store_true', default=False,
                                 help='Dedupe the bibtex library.')
+subparser_bibtexdb.add_argument('--llm', action='store_true', default=False,
+                                help='Use LLM for deduplication (experimental).')
 
 # # #  HTML subparser options # # #
 subparser_html = subparsers.add_parser('html', help='Write output to HTML bibliography.')
@@ -136,6 +138,15 @@ subparser_webserver.add_argument('--port', type=int, default=8080,
                                  help="Port to run server on.")
 subparser_webserver.add_argument('--addr', type=str, default='127.0.0.1',
                                  help="Address to bind.")
+
+# # #  Tex subparser options # # #
+subparser_tex = subparsers.add_parser('tex', help='Tools for working with .tex files.')
+subparser_tex.add_argument('tex_files', type=str, nargs='+',
+                           help='One or more .tex files to process.')
+subparser_tex.add_argument('--check-cites', action='store_true', default=False,
+                           help='Check for and consolidate duplicate citations.')
+subparser_tex.add_argument('--llm', action='store_true', default=False,
+                           help='Use LLM for deduplication (experimental).')
 
 
 argcomplete.autocomplete(parser)

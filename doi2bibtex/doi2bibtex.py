@@ -10,6 +10,7 @@ import doi2bibtex.bibtex as bibtex
 from doi2bibtex.bibtex.openalex import get_failures
 import doi2bibtex.output as output
 import doi2bibtex.web_app as web_app
+from doi2bibtex.tex import cites
 from colorama import init, Fore, Style
 from tqdm.asyncio import tqdm_asyncio
 import logging
@@ -51,6 +52,14 @@ async def async_main():
     if args.outputmode == 'webserver':
         logger.info(f"Starting server on {args.addr}:{args.port}")
         await web_app.web_server(args.addr, args.port)
+        sys.exit()
+
+    if args.outputmode == 'tex':
+        if args.check_cites:
+            if not args.bibtexdb:
+                logger.error("The --check-cites option requires a --bibtexdb to be specified.")
+                sys.exit(1)
+            cites.check_tex_cites(args.tex_files, args.bibtexdb, use_llm=args.llm)
         sys.exit()
     
     if args.bibtexdb:

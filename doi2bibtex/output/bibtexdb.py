@@ -25,7 +25,7 @@ async def do_bibtexdb(library: bibtexparser.library, args):
     elif args.clean:
         print(f"{Style.BRIGHT}{Fore.RED}No journals parsed, cannot clean.")
     if args.dedupe:
-        library = bibtex.dedupe(library)
+        library = bibtex.dedupe(library, use_llm=args.llm)
     if not library.entries:
         print(f'{Style.BRIGHT}{Fore.YELLOW}Not writing empty library to file.')
     elif interact.ask(f"Save library to {args.out}?"):

@@ -1,80 +1,136 @@
+from collections import defaultdict
 from colorama import Fore,Style,Back
 from doi2bibtex.util.getdoilogger import return_logger as getlogger
+from doi2bibtex.llm.base import get_llm_provider, get_llm_config
 
 logger = getlogger(__name__)
 
 
-def dedupe_bib_library(library):
+def dedupe_bib_library(library, use_llm=False):
     '''Check for duplicate bibtex entries'''
     logger.debug("Starting dedupe run")
     for entry in library.failed_blocks:
         print(f"{Style.BRIGHT}Failed:{Fore.RED} {entry.key}")
-    dedupe = []
-    dupes = {}
-    for entry in library.entries:
-        _key, _p, _v, _j, _doi = entry.key, '', '', '', ''
-        for _field in entry.fields_dict:
-            if _field.lower() in ('page', 'pages'):
-                _p = entry.fields_dict[_field].value.split('-')[0].strip().strip('-')
-            if _field.lower() == 'journal':
-                _j = entry.fields_dict[_field].value
-            if _field.lower() == 'volume':
-                _v = entry.fields_dict[_field].value
-            if _field.lower() == 'doi':
-                _doi = entry.fields_dict[_field].value
-        if _p and _v or _doi:
-            dedupe.append((_key, _p, _v, _j, _doi))
+
+    if use_llm:
+        print("Using LLM for deduplication...")
+        config = get_llm_config()
+        if not config:
+            print("Could not load LLM config. Falling back to standard deduplication.")
+            use_llm = False
         else:
-            logger.warn(f'Cannot dedue {entry.key}')
+            llm_provider = get_llm_provider(config.get('llm', {}))
+            if not llm_provider:
+                print("Could not initialize LLM provider. Falling back to standard deduplication.")
+                use_llm = False
+
+    if use_llm:
+        # This is a placeholder for the LLM-based deduplication logic.
+        # It would involve creating prompts to ask the LLM if two entries are duplicates
+        # and then processing the responses.
+        print("LLM-based deduplication is not yet fully implemented.")
+        # For now, we'll just fall back to the standard method.
+    
+    # Create a dictionary to hold potential duplicates.
+    # The key will be a tuple of (doi) or (pages, volume, journal)
+    # The value will be a list of entry keys that match.
+    dupe_candidates = defaultdict(list)
+    
+    for entry in library.entries:
+        _key = entry.key
+        _p, _v, _j, _doi = '', '', '', ''
+        
+        fields_lower = {k.lower(): v for k, v in entry.fields_dict.items()}
+        
+        if 'pages' in fields_lower:
+            _p = fields_lower['pages'].value.split('-')[0].strip().strip('-')
+        elif 'page' in fields_lower:
+            _p = fields_lower['page'].value.split('-')[0].strip().strip('-')
+        
+        if 'journal' in fields_lower:
+            _j = fields_lower['journal'].value
+        
+        if 'volume' in fields_lower:
+            _v = fields_lower['volume'].value
+            
+        if 'doi' in fields_lower:
+            _doi = fields_lower['doi'].value
+
+        # Prefer DOI for matching, fall back to page/volume/journal
+        if _doi:
+            dupe_key = ('doi', _doi)
+        elif _p and _v and _j:
+            dupe_key = ('pvj', _p, _v, _j)
+        else:
+            logger.warning(f'Cannot build a reliable dedupe key for {entry.key}')
             continue
-    while dedupe:
-        # Pop a dedupe tuple off the list
-        _e = dedupe.pop()
-        for _c in dedupe:
-            # See if it overlaps with tuples in the list
-            if _e[1:3] == _c[1:3] and _e[4] == _c[4]:
-                # Create a dictionary of lists of potential dupes keyed by ID
-                if _e[0] in dupes:
-                    dupes[_e[0]].append(_c)
-                else:
-                    dupes[_e[0]] = [_c]
-    if dupes:
-        return dodedupe(library, dupes)
+            
+        dupe_candidates[dupe_key].append(_key)
+
+    # Filter for actual duplicates (groups with more than one entry)
+    dupe_groups = [keys for keys in dupe_candidates.values() if len(keys) > 1]
+
+    if dupe_groups:
+        return dodedupe(library, dupe_groups)
+    
+    print("No potential duplicates found.")
     return library
 
 
-def dodedupe(library, dupes):
+def dodedupe(library, dupe_groups):
     '''Function that does the actual deduping'''
-    print('\nPossible dupes:\n')
-    for _key in dupes:
-        # dupe is a tuple (key, pages, volume, journal, doi)
-        dupe = dupes[_key]
-        i = 1
-        dupelist = { str(i):library.entries_dict[_key]  }
-        for _d in dupe:
-            i += 1
-            dupelist[str(i)] = library.entries_dict[_d[0]]
+    print('\nPossible dupes found:\n')
+    
+    processed_keys = set()
+    
+    for group in dupe_groups:
+        # Skip if all keys in this group have been processed already
+        if all(key in processed_keys for key in group):
+            continue
+
         print('\t\t# # #')
-        for _n in dupelist:
+        
+        # Build a numbered list of entries for user selection
+        dupelist = {}
+        i = 1
+        for key in group:
+            if key not in processed_keys:
+                dupelist[str(i)] = library.entries_dict[key]
+                i += 1
+
+        # If there's less than 2 entries, it's not a duplicate group anymore
+        if len(dupelist) < 2:
+            continue
+
+        for n, entry in dupelist.items():
             try:
-                print('%s%s%s):   %s%s' % (Style.BRIGHT,Fore.YELLOW,_n,Fore.CYAN,dupelist[_n].key))
-                print('%sJournal: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n].fields_dict['journal'].value))
-                print('%sVolume: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n].fields_dict['volume'].value))
-                print('%sPages: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[_n].fields_dict['pages'].value), end='\n\n')
-            except KeyError as msg:
-                print("Error parsing entry: %s" % str(msg))
-        keep = input('Keep which one?  ')
-        if keep not in dupelist:
-            print('%sKeeping all.' % (Fore.GREEN) )
+                print(f'{Style.BRIGHT}{Fore.YELLOW}{n}):   {Fore.CYAN}{entry.key}')
+                journal = entry.fields_dict.get('journal', 'N/A')
+                volume = entry.fields_dict.get('volume', 'N/A')
+                pages = entry.fields_dict.get('pages', 'N/A')
+                print(f'{Fore.YELLOW}Journal: {Style.BRIGHT}{Fore.WHITE}{journal.value if hasattr(journal, "value") else journal}')
+                print(f'{Fore.YELLOW}Volume: {Style.BRIGHT}{Fore.WHITE}{volume.value if hasattr(volume, "value") else volume}')
+                print(f'{Fore.YELLOW}Pages: {Style.BRIGHT}{Fore.WHITE}{pages.value if hasattr(pages, "value") else pages}\n')
+            except Exception as e:
+                print(f"Error parsing entry: {e}")
+
+        keep = input('Keep which one? (Enter number, or anything else to keep all) ')
+        
+        if keep in dupelist:
+            key_to_keep = dupelist[keep].key
+            print(f'{Style.BRIGHT}{Fore.GREEN}Keeping {key_to_keep}.')
+            
+            for n, entry_to_delete in dupelist.items():
+                if n != keep:
+                    key_to_delete = entry_to_delete.key
+                    print(f'{Fore.YELLOW}{Back.RED}Deleting{Style.RESET_ALL} {Style.BRIGHT}{Fore.RED}{key_to_delete}')
+                    library.remove(library.entries_dict[key_to_delete])
+                    processed_keys.add(key_to_delete)
+            processed_keys.add(key_to_keep)
         else:
-            print('%sKeeping %s%s.' % (Style.BRIGHT,Fore.GREEN,dupelist[keep].key))
-            for _n in dupelist:
-                if _n == keep:
-                    continue
-                for entry in library.entries:
-                    if entry.key == dupelist[_n].key:
-                        print('%s%sDeleting%s %s%s%s' % (Fore.YELLOW,Back.RED,
-                            Style.RESET_ALL,Style.BRIGHT,Fore.RED,entry.key))
-                        library.remove(entry)
-                        break
+            print(f'{Fore.GREEN}Keeping all in this group.')
+            # Mark all as processed so we don't ask again
+            for entry in dupelist.values():
+                processed_keys.add(entry.key)
+
     return library
