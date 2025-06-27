@@ -12,13 +12,12 @@ import doi2bibtex.output as output
 import doi2bibtex.web_app as web_app
 from doi2bibtex.tex import cites
 from doi2bibtex.llm import config_cli
-from colorama import init, Fore, Style
+from rich.console import Console
 from tqdm.asyncio import tqdm_asyncio
 import logging
 from contextlib import contextmanager
 
-# Setup colors
-init(autoreset=True)
+console = Console()
  
 @contextmanager
 def _buffer_logs():
@@ -95,12 +94,9 @@ async def async_main():
         nonlocal added
         nonlocal incr
         if not doi:
-            # print(f'{Fore.BLUE}{Style.BRIGHT}_', end=Style.RESET_ALL)
             return
         if doi.lower() in dois_in_library:
-            # print(f'{Fore.RED}{Style.BRIGHT}!', end=Style.RESET_ALL)
             return
-        #print(f'{Style.BRIGHT}*', end=Style.RESET_ALL)
         async with alex_throttler:
             metadata = await bibtex.async_get_metadata_from_doi(doi)
         async with doi_throttler:
@@ -111,13 +107,9 @@ async def async_main():
                 if _entry.key.lower() in citekeys_in_library:
                     _entry.key = f"{_entry.key}_{incr}"
                     incr += 1
-                    #print(f"|{Fore.YELLOW}Duplicate key replaced with {_entry.key}|", end=Style.RESET_ALL)
                 library.add(_entry)
                 citekeys_in_library.append(_entry.key.lower())
-                # print(f"|{Fore.GREEN}{_entry.key}:{doi}", end=Style.RESET_ALL+'|')
                 added += 1
-            # else:
-            #     print(f'{Fore.RED}{Style.BRIGHT}X', end=Style.RESET_ALL)
             except IndexError:
                 logger.warning(f"Error adding doi: {doi}")
     
@@ -131,17 +123,16 @@ async def async_main():
                     await spinner.update()
         else:
             tasks = [process_doi(doi) for doi in set(dois)]
-            # Buffer log messages during the progress bar to avoid interleaving
             await tqdm_asyncio.gather(*tasks, desc="Processing dois", colour='blue', unit='bib')
     if added:
-        print(f"{Fore.CYAN}Upadted library with {Style.BRIGHT}{added}{Style.NORMAL} DOIs.")
+        console.print(f"[cyan]Updated library with [bold]{added}[/bold] DOIs.[/cyan]")
     # Summarize any OpenAlex fetch failures
     failures = get_failures()
     if failures:
-        print()
-        print(f"{Fore.RED}⚠️  {len(failures)} OpenAlex fetches failed.{Style.RESET_ALL}")
+        console.print()
+        console.print(f"[red]⚠️  {len(failures)} OpenAlex fetches failed.[/red]")
         for url, msg in failures:
-            print(f"  • {url}: {msg}")
+            console.print(f"  • {url}: {msg}")
 
     await getattr(output, args.outputmode)(library, args)
 

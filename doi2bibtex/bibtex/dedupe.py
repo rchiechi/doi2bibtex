@@ -1,12 +1,12 @@
 from collections import defaultdict
 from itertools import combinations
-from colorama import Fore,Style,Back
+from rich.console import Console
 from doi2bibtex.util.getdoilogger import return_logger as getlogger
 from doi2bibtex.llm.base import get_llm_provider, save_llm_config, load_llm_config
 from Levenshtein import ratio
 
 logger = getlogger(__name__)
-
+console = Console()
 
 def _format_entry_for_llm(entry):
     """Formats a bibtex entry into a simple string for the LLM prompt."""
@@ -38,12 +38,12 @@ def dedupe_bib_library(library, use_llm=False, llm_model=None):
     '''Check for duplicate bibtex entries'''
     logger.debug("Starting dedupe run")
     for entry in library.failed_blocks:
-        print(f"{Style.BRIGHT}Failed:{Fore.RED} {entry.key}")
+        console.print(f"[bold]Failed:[red] {entry.key}")
 
     dupe_groups = []
 
     if use_llm:
-        print("Using LLM for deduplication (this may take a while)...")
+        console.print("Using LLM for deduplication (this may take a while)...")
         if llm_model:
             config = load_llm_config()
             config['default_model'] = llm_model
@@ -51,7 +51,7 @@ def dedupe_bib_library(library, use_llm=False, llm_model=None):
             
         llm_provider = get_llm_provider(llm_model)
         if not llm_provider:
-            print("Could not initialize LLM provider. Falling back to standard deduplication.")
+            console.print("Could not initialize LLM provider. Falling back to standard deduplication.")
             use_llm = False
 
     if use_llm:
@@ -143,13 +143,13 @@ def dedupe_bib_library(library, use_llm=False, llm_model=None):
     if dupe_groups:
         return dodedupe(library, dupe_groups)
     
-    print("No potential duplicates found.")
+    console.print("No potential duplicates found.")
     return library, {}
 
 
 def dodedupe(library, dupe_groups):
     '''Function that does the actual deduping'''
-    print('\nPossible dupes found:\n')
+    console.print('\nPossible dupes found:\n')
     
     processed_keys = set()
     key_map = {}
@@ -158,7 +158,7 @@ def dodedupe(library, dupe_groups):
         if all(key in processed_keys for key in group):
             continue
 
-        print('\t\t# # #')
+        console.print('\t\t# # #')
         
         dupelist = {}
         i = 1
@@ -172,32 +172,32 @@ def dodedupe(library, dupe_groups):
 
         for n, entry in dupelist.items():
             try:
-                print(f'{Style.BRIGHT}{Fore.YELLOW}{n}):   {Fore.CYAN}{entry.key}')
+                console.print(f'[bold yellow]{n}):[/bold yellow]   [cyan]{entry.key}[/cyan]')
                 journal = entry.fields_dict.get('journal', 'N/A')
                 volume = entry.fields_dict.get('volume', 'N/A')
                 pages = entry.fields_dict.get('pages', 'N/A')
-                print(f'{Fore.YELLOW}Journal: {Style.BRIGHT}{Fore.WHITE}{journal.value if hasattr(journal, "value") else journal}')
-                print(f'{Fore.YELLOW}Volume: {Style.BRIGHT}{Fore.WHITE}{volume.value if hasattr(volume, "value") else volume}')
-                print(f'{Fore.YELLOW}Pages: {Style.BRIGHT}{Fore.WHITE}{pages.value if hasattr(pages, "value") else pages}\n')
+                console.print(f'[yellow]Journal: [bold white]{journal.value if hasattr(journal, "value") else journal}[/bold white]')
+                console.print(f'[yellow]Volume: [bold white]{volume.value if hasattr(volume, "value") else volume}[/bold white]')
+                console.print(f'[yellow]Pages: [bold white]{pages.value if hasattr(pages, "value") else pages}[/bold white]\n')
             except Exception as e:
-                print(f"Error parsing entry: {e}")
+                console.print(f"Error parsing entry: {e}")
 
         keep = input('Keep which one? (Enter number, or anything else to keep all) ')
         
         if keep in dupelist:
             key_to_keep = dupelist[keep].key
-            print(f'{Style.BRIGHT}{Fore.GREEN}Keeping {key_to_keep}.')
+            console.print(f'[bold green]Keeping {key_to_keep}.[/bold green]')
             
             for n, entry_to_delete in dupelist.items():
                 if n != keep:
                     key_to_delete = entry_to_delete.key
-                    print(f'{Fore.YELLOW}{Back.RED}Deleting{Style.RESET_ALL} {Style.BRIGHT}{Fore.RED}{key_to_delete}')
+                    console.print(f'[yellow on red]Deleting[/yellow on red] [bold red]{key_to_delete}[/bold red]')
                     library.remove(library.entries_dict[key_to_delete])
                     processed_keys.add(key_to_delete)
                     key_map[key_to_delete] = key_to_keep
             processed_keys.add(key_to_keep)
         else:
-            print(f'{Fore.GREEN}Keeping all in this group.')
+            console.print('[green]Keeping all in this group.[/green]')
             for entry in dupelist.values():
                 processed_keys.add(entry.key)
 

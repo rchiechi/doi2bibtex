@@ -14,7 +14,6 @@ packages = [{include = "doi2bibtex"}] # Important: Specify your package director
 [tool.poetry.dependencies]
 python = ">=3.12" # Specify Python versions
 bibtexparser = '>=2.0.0b7'
-colorama = '>=0.4.6'
 python-Levenshtein = '>=0.23.0'
 titlecase = '>=2.4.1'
 pyperclip = '>=1.8.2'
@@ -26,6 +25,7 @@ httpx = '>=0.28.1'
 asyncio-throttle = '>=1.0.2'
 python-magic = '>=0.4.27'
 tqdm = "^4.67.1"
+rich = ">=13.7.1"
 [tool.poetry.dev-dependencies] # Development dependencies
 pytest = "^7.0"
 
