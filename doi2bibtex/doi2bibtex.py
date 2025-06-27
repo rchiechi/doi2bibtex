@@ -11,6 +11,7 @@ from doi2bibtex.bibtex.openalex import get_failures
 import doi2bibtex.output as output
 import doi2bibtex.web_app as web_app
 from doi2bibtex.tex import cites
+from doi2bibtex.llm import config_cli
 from colorama import init, Fore, Style
 from tqdm.asyncio import tqdm_asyncio
 import logging
@@ -54,12 +55,16 @@ async def async_main():
         await web_app.web_server(args.addr, args.port)
         sys.exit()
 
+    if args.outputmode == 'llm-config':
+        config_cli.llm_config_main(args)
+        sys.exit()
+
     if args.outputmode == 'tex':
         if args.check_cites:
             if not args.bibtexdb:
                 logger.error("The --check-cites option requires a --bibtexdb to be specified.")
                 sys.exit(1)
-            cites.check_tex_cites(args.tex_files, args.bibtexdb, use_llm=args.llm)
+            cites.check_tex_cites(args.tex_files, args.bibtexdb, use_llm=args.llm, llm_model=args.llm_model)
         sys.exit()
     
     if args.bibtexdb:

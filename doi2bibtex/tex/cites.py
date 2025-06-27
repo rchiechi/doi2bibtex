@@ -22,7 +22,7 @@ def find_citation_keys(tex_files):
     return list(citation_keys)
 
 
-def check_tex_cites(tex_files, bib_database, use_llm=False):
+def check_tex_cites(tex_files, bib_database, use_llm=False, llm_model=None):
     """
     Check .tex files for duplicate citations and consolidate them.
     """
@@ -40,7 +40,7 @@ def check_tex_cites(tex_files, bib_database, use_llm=False):
             cited_library.add(entry)
     
     print("Checking for duplicate entries in the cited library...")
-    consolidated_library, key_map = dedupe_bib_library(cited_library, use_llm=use_llm)
+    consolidated_library, key_map = dedupe_bib_library(cited_library, use_llm=use_llm, llm_model=llm_model)
 
     if not key_map:
         print("No changes to make to .tex files.")

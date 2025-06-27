@@ -2,7 +2,7 @@ from collections import defaultdict
 from itertools import combinations
 from colorama import Fore,Style,Back
 from doi2bibtex.util.getdoilogger import return_logger as getlogger
-from doi2bibtex.llm.base import get_llm_provider, get_llm_config
+from doi2bibtex.llm.base import get_llm_provider, save_llm_config, load_llm_config
 from Levenshtein import ratio
 
 logger = getlogger(__name__)
@@ -34,7 +34,7 @@ Are these two entries for the same publication?"""
         return response.strip().upper() == 'YES'
     return False
 
-def dedupe_bib_library(library, use_llm=False):
+def dedupe_bib_library(library, use_llm=False, llm_model=None):
     '''Check for duplicate bibtex entries'''
     logger.debug("Starting dedupe run")
     for entry in library.failed_blocks:
@@ -44,15 +44,15 @@ def dedupe_bib_library(library, use_llm=False):
 
     if use_llm:
         print("Using LLM for deduplication (this may take a while)...")
-        config = get_llm_config()
-        if not config or not config.get('llm'):
-            print("Could not load LLM config. Falling back to standard deduplication.")
+        if llm_model:
+            config = load_llm_config()
+            config['default_model'] = llm_model
+            save_llm_config(config)
+            
+        llm_provider = get_llm_provider(llm_model)
+        if not llm_provider:
+            print("Could not initialize LLM provider. Falling back to standard deduplication.")
             use_llm = False
-        else:
-            llm_provider = get_llm_provider(config.get('llm', {}))
-            if not llm_provider:
-                print("Could not initialize LLM provider. Falling back to standard deduplication.")
-                use_llm = False
 
     if use_llm:
         # LLM-based deduplication

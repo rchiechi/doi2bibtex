@@ -41,6 +41,8 @@ parser.add_argument('--cited', action='store_true', default=False,
                     help="Return the bibliographies of the papers in the input doi(s).")
 parser.add_argument('--citing', action='store_true', default=False,
                     help="Return dois that cite the papers in the input doi(s).")
+parser.add_argument('--llm-model', type=str, default=None,
+                    help="Specify the LLM model to use from config. Updates the default.")
 
 #  Initialize Subparsers
 subparsers = parser.add_subparsers(help='sub-command help', required=True, dest='outputmode',
@@ -138,6 +140,11 @@ subparser_webserver.add_argument('--port', type=int, default=8080,
                                  help="Port to run server on.")
 subparser_webserver.add_argument('--addr', type=str, default='127.0.0.1',
                                  help="Address to bind.")
+
+# # #  LLM Config subparser options # # #
+subparser_llm_config = subparsers.add_parser('llm-config', help='Configure LLM models.')
+subparser_llm_config.add_argument('llm_action', type=str, choices=['list', 'add', 'rm', 'default'],
+                                  help='Action to perform.')
 
 # # #  Tex subparser options # # #
 subparser_tex = subparsers.add_parser('tex', help='Tools for working with .tex files.')
