@@ -223,7 +223,7 @@ def parseAuthors(authors, boldname, textf=None):
 async def resolvedoi(doi, key='null'):
     entry = Entry('article', str(doi), [Field(key, '')])
     if doi is not None:
-        result = await util.async_get_bibtex_from_url(doi)
+        result = await bibtex.async_get_bibtex_from_url(doi)
         if result:
             entry = bibtex.read(result).entries[0]
             print(f'{Style.BRIGHT}{Fore.GREEN}Got record from {doi}.')
