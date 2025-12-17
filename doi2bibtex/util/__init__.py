@@ -1,6 +1,6 @@
 import urllib.parse
 from .getdoilogger import return_logger as getlogger
-from .doifinder import find_doi, find_doi_in_bytearray
+from .doifinder import find_doi, find_doi_in_bytearray, parse_doi_from_url
 from .cache import loadcache, writetodisk
 from .abbreviso import local_iso4
 from .LaTexAccents import AccentConverter
@@ -15,6 +15,9 @@ from .validate import validate_and_fix_bibtex
 
 # def getlogger(_name=None, **kwargs):
 #     return return_logger(_name, **kwargs)
+
+def doi_from_url(url_string):
+    return parse_doi_from_url(url_string)
 
 def doifinder(textstring):
     return find_doi(textstring)

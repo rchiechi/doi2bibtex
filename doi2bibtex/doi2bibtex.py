@@ -93,6 +93,7 @@ async def async_main():
     async def process_doi(doi):
         nonlocal added
         nonlocal incr
+        doi = util.doi_from_url(doi)
         if not doi:
             return
         if doi.lower() in dois_in_library:
