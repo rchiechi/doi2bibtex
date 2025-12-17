@@ -2,7 +2,7 @@ from collections import defaultdict
 from itertools import combinations
 from rich.console import Console
 from doi2bibtex.util.getdoilogger import return_logger as getlogger
-from doi2bibtex.llm.base import get_llm_provider, save_llm_config, load_llm_config
+from doi2bibtex.llm.config import get_llm_provider, save_llm_config, load_llm_config
 from Levenshtein import ratio
 
 logger = getlogger(__name__)

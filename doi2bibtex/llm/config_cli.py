@@ -1,4 +1,4 @@
-from .base import load_llm_config, save_llm_config
+from .config import load_llm_config, save_llm_config
 from rich.console import Console
 import sys
 
