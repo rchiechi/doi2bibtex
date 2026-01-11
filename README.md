@@ -1,4 +1,7 @@
 # doi2bibtex
+
+Migrated repo to [Codeberg](https://codeberg.org/rcclab/doi2bibtex)
+
 ### An interactive script to convert DOIs to bibtex entries and cleanup entries in a bibtex database using bibtexparser.
 doi2bibtex will:
 - Convert DOIs to bibtex entries from a file or command line input
